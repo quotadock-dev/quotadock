@@ -138,8 +138,14 @@ and emails remain iPhone-private. Legacy static widget kinds retain the first-sl
 projection. The new Apple UI/AppIntent integration compiles against Xcode 27.1
 for all four targets; simulator contracts and isolated presentation hosts run
 without provider access. Those hosts are not installed system widgets or a paired
-Watch. Actual provider access, policy permission and two real independent accounts
-remain unverified; see [current validation limits](apple/BILLING.md#validation-limits).
+Watch. A separate 2026-10-18 iOS/watchOS 27 simulator run exercised production
+WatchConnectivity with synthetic sanitized accounts, native Watch selection and
+offline restart, and installed small/medium iPhone widgets with explicit UUIDs
+and quota windows. It exposed and corrected a native Watch picker layout defect
+and a populated-widget recommendation crash. This is simulator evidence, not
+physical-device or real-provider acceptance. Actual provider access, policy
+permission and two real independent accounts remain unverified; see
+[current validation limits](apple/BILLING.md#validation-limits).
 
 The server stores sanitized quota **and pseudonymous identity, hashed sessions,
 collector grants, consent, billing/transaction IDs and counters**. A database leak
@@ -205,7 +211,7 @@ Provider icons are MIT-licensed Lobe Icons assets with provenance and trademark
 notices in [third-party notices](THIRD_PARTY_NOTICES.md). Xcode 16.4 simulator
 builds and native contract tests are tracked by the CI badge. Screenshots are
 demo renders, not real-provider or physical-device proof.
-Physical-device signing, pairing and system widget layouts remain unverified;
+Physical-device signing/pairing and untested system widget families remain unverified;
 see [native verification limits](apple/README.md).
 
 Watch receives snapshots through WatchConnectivity, **never the bridge token**. Watch widgets read the Watch's local cache. Use Xcode's scheme list as the source of truth for actual generated target names.

@@ -60,7 +60,7 @@ struct AccountQuotaTimeline: AppIntentTimelineProvider {
             let intent = AccountWidgetIntent()
             intent.account = SurfaceAccountEntity(account)
             return AppIntentRecommendation(intent: intent,
-                description: "\(account.provider.displayName) · \(String(account.id.uuidString.prefix(8)))")
+                description: Text(verbatim: "\(account.provider.displayName) · \(String(account.id.uuidString.prefix(8)))"))
         }
     }
     func placeholder(in context: Context) -> AccountQuotaEntry {

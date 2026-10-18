@@ -2,7 +2,7 @@ import SwiftUI
 
 @main
 struct QuotaDockWatchApp: App {
-    var body: some Scene { WindowGroup { WatchDashboard() } }
+    var body: some Scene { WindowGroup { NavigationStack { WatchDashboard() } } }
 }
 
 struct WatchDashboard: View {

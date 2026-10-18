@@ -27,11 +27,19 @@ struct AccountWatchContent: View {
                             .tag(account.id.uuidString.lowercased())
                     }
                 }
+                #if os(watchOS)
+                .pickerStyle(.navigationLink)
+                .frame(minHeight: 44)
+                #endif
                 Picker(DockL10n.text("Window"), selection: $window) {
                     ForEach(["primary", "secondary", "tertiary", "weekly", "pro"], id: \.self) {
                         Text(DockL10n.text($0.capitalized)).tag($0)
                     }
                 }
+                #if os(watchOS)
+                .pickerStyle(.navigationLink)
+                .frame(minHeight: 44)
+                #endif
                 AccountSurfaceContent(snapshot: snapshot, accountID: id, windowID: window,
                                       date: Date(), surface: .small)
                     .padding(10)
