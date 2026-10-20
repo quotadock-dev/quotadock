@@ -7,22 +7,21 @@ Every purchase price displayed by the native coordinator comes from StoreKit
 `Product.displayPrice`; annual totals are shown directly, not divided by twelve.
 
 Use exactly `com.quotadock.app.{plus,pro}.{monthly,annual}` in one Apple
-subscription group. Only Plus monthly and annual may have a one-calendar-month
-introductory free trial. Configure free-trial payment mode, month/value 1, and
-periodCount 1. Never configure a Pro introductory offer. StoreKit eligibility
-alone is insufficient: it can be true without a configured introductory offer.
-Apple allows one introductory offer per person per subscription group, not one
-per product, QuotaDock login, or billing cadence.
+subscription group. All four products are paid from the first purchase with no
+introductory offer or free trial. Do not configure introductory offers in App
+Store Connect; remove any existing ones before enabling sales. The permanent
+Free tier remains available. No introductory-eligibility query is needed.
 
 Existing backend Live/due policies remain unchanged. Plus's five Live sessions
 refill monthly even on annual billing, not just once per annual renewal.
 
-Products from different subscription groups are rejected. A promised trial is
-checked again against freshly fetched offer metadata and asynchronous Apple
-eligibility immediately before purchase; loss of that offer stops purchase and
-asks for reload, rather than silently initiating ordinary paid billing. Price or
-subscription-period changes also stop purchase. Apple controls the final purchase
-sheet and eligibility; no app-local trial clock or paid entitlement is created.
+Products from different subscription groups or with any introductory offer are
+rejected. Fresh metadata must still have no introductory offer and match the
+displayed price, group and subscription period immediately before purchase;
+changes stop purchase and ask for reload. Apple controls the final purchase
+sheet, and only an explicit user purchase action opens it. The server rejects
+signed `FREE_TRIAL` transactions for every product; ordinary paid renewals and
+signed paid offer modes remain valid. No app-local paid entitlement is created.
 
 Purchases, recovery and receipt delivery are available only when the authenticated
 cloud client's base URL is the official HTTPS `usage.mvtp.cloud` origin (default
@@ -33,7 +32,7 @@ revision-based logout invalidation remain authoritative.
 
 ## Integration
 
-`iOS/BillingPolicy.swift` contains Foundation-only catalog, origin and trial
+`iOS/BillingPolicy.swift` contains Foundation-only catalog, origin and paid-only
 guards. `PortableTests/BillingContractTests.swift` contains the billing contract
 matrix and runs in both the portable package and hosted native test target.
 `Tests/PurchaseTests.swift` covers signed transaction ownership and server
@@ -41,6 +40,17 @@ acceptance independently of the new catalog decisions.
 Portable policy tests do not validate the StoreKit coordinator or Apple services.
 
 ## Validation limits
+
+The user removed free trials on 2026-10-20 after separate clean monthly and
+annual local StoreKit probes failed their post-purchase eligibility assertions.
+Those failures remain historical evidence; they were not fixed or reclassified
+as passing. New paid-only validation must use a separate configuration with no
+introductory offers and verify ordinary paid transactions. Local StoreKit cannot
+prove App Store Connect configuration, production purchases or server acceptance.
+Sales remain disabled pending real Apple sandbox and production-configuration
+gates. Changing source does not remove offers from App Store Connect.
+
+### Historical trial-era evidence (superseded policy)
 
 On 2026-10-17, Xcode 27.1 compiled the final four-target iPhone/Watch/widget source.
 All 110 hosted native units and four production onboarding UI tests passed;
@@ -56,8 +66,8 @@ including 160 trial combinations plus catalog/origin/stale-promise assertions.
 Disposable PostgreSQL tests separately cover signed trial metadata and annual
 monthly benefit boundaries. None establishes App Store Connect configuration.
 
-Actual Apple sandbox follow-up must cover configured offers and eligibility,
-changed eligibility/price, pending/cancelled purchase, restore/refund, logout
+Actual Apple sandbox follow-up must cover no-introductory-offer product configuration,
+changed metadata/price, pending/cancelled purchase, restore/refund, logout
 during delivery, original transaction ownership and deleted-account recovery.
 Local or synthetic metadata must never be accepted by the production server.
 

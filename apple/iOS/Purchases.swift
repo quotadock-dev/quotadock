@@ -52,7 +52,6 @@ struct PurchaseContextIdentity: Equatable {
 @MainActor
 final class PurchasesModel: ObservableObject {
     @Published private(set) var products: [Product] = []
-    @Published private(set) var trialProductIDs: Set<String> = []
     @Published private(set) var busy = false
     @Published private(set) var status = "Purchases unavailable. Connect to a verified cloud account."
     @Published private(set) var available = false
@@ -91,7 +90,6 @@ final class PurchasesModel: ObservableObject {
             revision += 1
             recovery?.cancel(); recovery = nil
             inFlight.removeAll(); newerUpdates.removeAll(); products = []; operations = 0; busy = false
-            trialProductIDs = []
             status = next == nil ? "Purchases unavailable. Connect to a verified cloud account." : "Load subscription products to purchase."
         }
         identity = next; self.client = next == nil ? nil : client
@@ -121,38 +119,26 @@ final class PurchasesModel: ObservableObject {
             let fetched = try await Product.products(for: PurchasePolicy.productIDs)
             guard current(value) else { return }
             let supported = fetched.filter { product in
-                guard PurchasePolicy.productIDs.contains(product.id), product.type == .autoRenewable,
-                      let subscription = product.subscription else { return false }
-                guard BillingPolicy.tier(product.id) != "pro" || subscription.introductoryOffer == nil else { return false }
+                guard product.type == .autoRenewable, let subscription = product.subscription,
+                      BillingPolicy.supports(productID: product.id,
+                          hasIntroductoryOffer: subscription.introductoryOffer != nil) else { return false }
                 return subscription.subscriptionPeriod.value == 1 &&
                     subscription.subscriptionPeriod.unit == (BillingPolicy.annual(product.id) ? .year : .month)
             }
                 .sorted { $0.id < $1.id }
-            // A mismatched group is a configuration error, not another trial opportunity.
+            // A mismatched group is a configuration error.
             guard Set(supported.compactMap { $0.subscription?.subscriptionGroupID }).count <= 1 else {
-                products = []; trialProductIDs = []
+                products = []
                 status = "This subscription product is unavailable."; return
             }
-            var trials: Set<String> = []
-            for product in supported {
-                if await offersTrial(product) { trials.insert(product.id) }
-                guard current(value) else { return }
-            }
-            products = supported; trialProductIDs = trials
+            products = supported
             status = products.count == PurchasePolicy.productIDs.count ? "Subscription products available." : "Some subscription products are unavailable. Try again later."
         } catch {
             if current(value) { status = "Subscription products could not be loaded. Try again later." }
         }
     }
 
-    private func offersTrial(_ product: Product) async -> Bool {
-        guard let subscription = product.subscription, let offer = subscription.introductoryOffer else { return false }
-        return BillingPolicy.offersTrial(productID: product.id, freeTrial: offer.paymentMode == .freeTrial,
-            monthUnit: offer.period.unit == .month, periodValue: offer.period.value,
-            periodCount: offer.periodCount, eligible: await subscription.isEligibleForIntroOffer)
-    }
-
-    func purchase(_ product: Product, promisedTrial: Bool = false) async {
+    func purchase(_ product: Product) async {
         guard let identity, available, !busy else { return }
         guard PurchasePolicy.productIDs.contains(product.id), product.type == .autoRenewable,
               products.contains(where: { $0.id == product.id }) else {
@@ -161,21 +147,17 @@ final class PurchasesModel: ObservableObject {
         let value = revision
         begin(); defer { end(value) }
         do {
-            // Fetch fresh metadata as well as eligibility before honoring a displayed trial.
+            // Recheck paid-only configuration and the displayed price before Apple's sheet.
             guard let fresh = try await Product.products(for: [product.id]).first,
                   fresh.type == .autoRenewable, fresh.subscription?.subscriptionGroupID == product.subscription?.subscriptionGroupID,
                   fresh.subscription?.subscriptionPeriod == product.subscription?.subscriptionPeriod,
-                  BillingPolicy.tier(fresh.id) != "pro" || fresh.subscription?.introductoryOffer == nil,
+                  BillingPolicy.supports(productID: fresh.id,
+                      hasIntroductoryOffer: fresh.subscription?.introductoryOffer != nil),
                   fresh.price == product.price else {
                 if current(value) { status = "Subscription offer changed. Reload products before purchasing." }
                 return
             }
-            let currentTrial = await offersTrial(fresh)
             guard current(value) else { return }
-            guard BillingPolicy.mayPurchase(promisedTrial: promisedTrial, currentTrial: currentTrial) else {
-                trialProductIDs.remove(product.id)
-                status = "Subscription offer changed. Reload products before purchasing."; return
-            }
             let result = try await fresh.purchase(options: [.appAccountToken(identity.accountToken)])
             guard current(value) else { return }
             switch result {
@@ -292,13 +274,11 @@ struct SubscriptionsView: View {
     var body: some View {
         SubscriptionPanel(available: store.available, busy: store.busy, status: store.status,
             options: store.products.map { SubscriptionOption(id: $0.id, name: $0.displayName, price: $0.displayPrice,
-                tier: BillingPolicy.tier($0.id) ?? "", annual: BillingPolicy.annual($0.id),
-                trial: store.trialProductIDs.contains($0.id)) }, currentTier: currentTier,
+                tier: BillingPolicy.tier($0.id) ?? "", annual: BillingPolicy.annual($0.id)) }, currentTier: currentTier,
             load: { Task { await store.loadProducts() } },
             purchase: { id in
                 guard let product = store.products.first(where: { $0.id == id }) else { return }
-                let promisedTrial = store.trialProductIDs.contains(id)
-                Task { await store.purchase(product, promisedTrial: promisedTrial) }
+                Task { await store.purchase(product) }
             }, restore: { Task { await store.restore() } })
     }
 }

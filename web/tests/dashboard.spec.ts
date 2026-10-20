@@ -372,20 +372,24 @@ test('plans stay read-only, bilingual and concise without collecting paired quot
         await expect(plus.locator('.plan-price')).toContainText(cycle === 'month' ? '2,990' : '29,900');
         await expect(pro.locator('.plan-price')).toContainText(cycle === 'month' ? '5,990' : '59,900');
         await expect(pro).toContainText(language === 'ko' ? 'AI 계정 최대 25개' : 'Up to 25 AI accounts');
-        await expect(plus).toContainText(language === 'ko' ? '무료 1개월 후' : 'after 1 free month:');
-        await expect(plus.locator('p').filter({ hasText: language === 'ko' ? '무료 1개월 후' : 'after 1 free month:' })).toContainText(cycle === 'month' ? '2,990' : '29,900');
-        await expect(pro).not.toContainText(/1개월 무료|1 month free/);
-        await expect(page.getByRole('article', { name: 'QuotaDock Free', exact: true })).not.toContainText(/1개월 무료|1 month free/);
-        await expect(page.locator('.trial-details')).toHaveCount(1);
+        for (const [card, amount] of [[plus, cycle === 'month' ? '2,990' : '29,900'], [pro, cycle === 'month' ? '5,990' : '59,900']] as const) {
+          const payment = card.locator('p').filter({ hasText: language === 'ko' ? '첫 구매 시 결제:' : 'Charged at first purchase:' });
+          await expect(payment).toContainText(amount);
+          await expect(payment).toContainText(language === 'ko' ? '자동 갱신' : 'auto-renewing');
+          await expect(payment).toContainText(language === 'ko' ? cycle === 'month' ? '/ 월' : '/ 년' : cycle === 'month' ? '/ month' : '/ year');
+        }
+        await expect(page.getByRole('article', { name: 'QuotaDock Free', exact: true })).toContainText(language === 'ko' ? '기간 제한 없이 무료' : 'Free with no time limit');
+        await expect(page.locator('main')).not.toContainText(/1개월 무료|1 month free|introductory offer|무료 1개월 후|after 1 free month|혜택 적용|offer eligibility/);
+        await expect(page.locator('.trial-details')).toHaveCount(0);
+        await expect(page.locator('.plan-terms')).toContainText(language === 'ko' ? '무료 체험 없이 첫 구매부터 결제' : 'charged from the first purchase, with no free trial');
+        await expect(page.locator('.plan-terms')).toContainText(language === 'ko' ? '첫 구매 시 1년 전액' : 'full year at first purchase');
+        await expect(page.locator('.plan-terms')).toContainText(language === 'ko' ? '선택한 월간 또는 연간 주기로 자동 갱신' : 'Renews automatically on the selected monthly or annual cycle');
         for (const state of ['closed', 'expanded']) {
-          await page.locator('.trial-details').evaluate((element, open) => { (element as HTMLDetailsElement).open = open; }, state === 'expanded');
           await page.locator('.plan-terms').evaluate((element, open) => { (element as HTMLDetailsElement).open = open; }, state === 'expanded');
           expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
           if (process.env.CAPTURE_PLANS) await page.screenshot({ path: `.amp/in/artifacts/final-plans-${language}-${width}-${cycle}-${state}.png`, fullPage: true });
         }
-        await expect(plus.locator('.trial-details')).toContainText(language === 'ko' ? '이 웹은 현재 방문자의 자격을 확인하지 않습니다.' : 'This web page does not determine your eligibility.');
       }
-      await page.locator('.trial-details summary').click();
       await page.locator('.plan-terms summary').click();
       await expect(page.getByRole('button')).toHaveCount(0);
       await expect(page.locator('main')).not.toContainText(/목표|출시|준비 중|release target|not on sale|not available yet|month target/i);

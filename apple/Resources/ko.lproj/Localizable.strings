@@ -256,12 +256,8 @@
 "Annual" = "연간";
 "Billing period" = "결제 주기";
 "Review with Apple" = "Apple에서 변경 확인";
-"First month free, then %@ billed annually. Automatically renews." = "첫 1개월 무료, 이후 매년 %@이 청구됩니다. 자동 갱신됩니다.";
-"First month free, then %@ billed monthly. Automatically renews." = "첫 1개월 무료, 이후 매월 %@이 청구됩니다. 자동 갱신됩니다.";
-"One introductory offer per Apple subscription group." = "Apple 구독 그룹당 최초 할인 혜택은 한 번만 이용할 수 있습니다.";
-"Billed annually. Automatically renews." = "매년 결제되며 자동 갱신됩니다.";
-"Billed monthly. Automatically renews." = "매월 결제되며 자동 갱신됩니다.";
-"Start first month free" = "첫 1개월 무료로 시작";
+"Charged at purchase. Automatically renews annually." = "구매 시 결제되며 매년 자동 갱신됩니다.";
+"Charged at purchase. Automatically renews monthly." = "구매 시 결제되며 매월 자동 갱신됩니다.";
 "Subscription offer changed. Reload products before purchasing." = "구독 혜택이 변경되었습니다. 구매 전에 상품을 다시 불러오세요.";
 "Subscriptions are charged to your Apple account and automatically renew. Cancel in Apple subscription settings before the next renewal. Deleting your cloud account does not cancel your Apple subscription." = "Apple 계정으로 자동 갱신됩니다. 다음 갱신 전 Apple 구독 설정에서 취소하세요. 앱 계정 삭제는 구독 취소가 아닙니다.";
 "Account unavailable" = "계정을 사용할 수 없음";

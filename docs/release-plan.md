@@ -137,10 +137,11 @@ rejected. Observation timestamps never stand in for job identity.
 2. Load the four known monthly/annual auto-renewable Plus/Pro products in one
    subscription group. Korean targets are Plus KRW 2,990/month or 29,900/year,
    Pro 5,990/month or 59,900/year; only StoreKit `displayPrice` is displayed.
-   Plus alone may offer a configured, eligible one-calendar-month free trial on
-   either cadence: metadata and Apple eligibility must both agree. One intro
-   per person per subscription group; no Pro trial. Recheck the promised offer
-   and price before purchase; changes stop purchase, not silently paid billing.
+   Both tiers charge from first purchase with no introductory offer or free trial.
+   Remove introductory offers from all four products in App Store Connect before
+   enabling sales. The app rejects products with such offers and does not query
+   introductory eligibility. Recheck offer absence, period, group and price before
+   purchase; changed metadata stops purchase and asks for reload.
    Show annual totals and renewal terms. Unavailable products cannot be purchased.
 3. Purchase with that UUID; pending approval and cancellation do not grant access.
 4. Require StoreKit verification and exact account ownership. Send the bounded

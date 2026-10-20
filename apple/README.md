@@ -52,11 +52,12 @@ comparison at `/?view=plans`; it has no checkout.
 
 Free supports 3 accounts/1 collector, Plus 10/3 and Pro 25/5. Korean storefront
 configuration targets are Plus KRW 2,990/month or 29,900/year and Pro KRW
-5,990/month or 59,900/year. Only eligible Plus monthly/annual products with a
-configured one-calendar-month free trial may offer it; StoreKit metadata,
-`displayPrice` and eligibility are authoritative. One introductory offer is
-allowed per subscription group. Annual Plus benefits refill monthly; existing
-Live and due-refresh policies are unchanged. See [billing](BILLING.md).
+5,990/month or 59,900/year. Both paid tiers charge from the first purchase with
+no free trial. Keep all four products free of introductory offers in App Store
+Connect; the app rejects products with those offers and never queries trial
+eligibility. StoreKit `displayPrice` remains authoritative. The permanent Free
+plan, annual Plus monthly benefit refills, Live and due-refresh policies are
+unchanged. See [billing](BILLING.md).
 
 Open the dashboard's person icon for the **Accounts** sheet. Add a provider, then
 open its individual account to enter a name/email, inspect quota and copy its UUID.

@@ -6,7 +6,7 @@ import XCTest
 #endif
 
 final class BillingContractTests: XCTestCase {
-    func testCatalogOriginAndPlusOnlyOneMonthTrial() {
+    func testCatalogOriginAndPaidOnlyProducts() {
         let products = ["com.quotadock.app.plus.monthly", "com.quotadock.app.plus.annual",
                         "com.quotadock.app.pro.monthly", "com.quotadock.app.pro.annual"]
         XCTAssertEqual(Set(BillingPolicy.productIDs), Set(products))
@@ -17,23 +17,9 @@ final class BillingContractTests: XCTestCase {
             XCTAssertFalse(BillingPolicy.officialOrigin(URL(string: text)!))
         }
         for id in products + ["com.quotadock.app.plus.foreign"] {
-            for eligible in [true, false] {
-                for free in [true, false] {
-                    for month in [true, false] {
-                        for value in [1, 2] {
-                            for count in [1, 2] {
-                                let plus = id == products[0] || id == products[1]
-                                XCTAssertEqual(BillingPolicy.offersTrial(productID: id, freeTrial: free,
-                                    monthUnit: month, periodValue: value, periodCount: count, eligible: eligible),
-                                    plus && eligible && free && month && value == 1 && count == 1)
-                            }
-                        }
-                    }
-                }
-            }
+            XCTAssertEqual(BillingPolicy.supports(productID: id, hasIntroductoryOffer: false),
+                           products.contains(id))
+            XCTAssertFalse(BillingPolicy.supports(productID: id, hasIntroductoryOffer: true))
         }
-        XCTAssertFalse(BillingPolicy.mayPurchase(promisedTrial: true, currentTrial: false))
-        XCTAssertTrue(BillingPolicy.mayPurchase(promisedTrial: true, currentTrial: true))
-        XCTAssertTrue(BillingPolicy.mayPurchase(promisedTrial: false, currentTrial: false))
     }
 }

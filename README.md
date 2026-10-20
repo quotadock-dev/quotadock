@@ -103,11 +103,12 @@ An offline collector cannot produce fresh usage, even while the server is online
 | Plus | 10 | 3 | ₩2,990 / ₩29,900 |
 | Pro | 25 | 5 | ₩5,990 / ₩59,900 |
 
-Plus monthly and annual can include the **first month free**, only when Apple has
-a configured one-month introductory offer and the purchaser is eligible. Pro has
-no free trial. Prices above describe product policy; actual localized prices and
-renewal charges come from StoreKit. One introductory offer per subscription group;
-deleting the cloud account does not cancel an Apple subscription.
+Plus and Pro monthly/annual subscriptions are **paid from the first purchase,
+with no free trial**. The permanent Free plan remains available. Prices above
+describe product policy; actual localized prices and renewal charges come from
+StoreKit. Products configured with introductory offers are unavailable in the app;
+remove those offers in App Store Connect before enabling sales. Deleting the
+cloud account does not cancel an Apple subscription.
 
 Server policies and native StoreKit purchase/restore source are implemented;
 **purchases remain disabled on the unconfigured pilot**. Product/signature/account

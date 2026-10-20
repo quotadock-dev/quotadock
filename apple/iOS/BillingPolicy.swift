@@ -1,6 +1,6 @@
 import Foundation
 
-/// StoreKit-independent decisions; no local entitlement or trial clock.
+/// StoreKit-independent decisions; no local entitlement.
 enum BillingPolicy {
     static let productIDs = ["com.quotadock.app.plus.monthly", "com.quotadock.app.pro.monthly",
                              "com.quotadock.app.plus.annual", "com.quotadock.app.pro.annual"]
@@ -18,14 +18,8 @@ enum BillingPolicy {
             && (url.path.isEmpty || url.path == "/") && url.query == nil && url.fragment == nil
     }
 
-    static func offersTrial(productID: String, freeTrial: Bool, monthUnit: Bool,
-                            periodValue: Int, periodCount: Int, eligible: Bool) -> Bool {
-        tier(productID) == "plus" && freeTrial && monthUnit && periodValue == 1
-            && periodCount == 1 && eligible
-    }
-
-    /// If a free month was promised, changed eligibility must stop, not start a paid purchase.
-    static func mayPurchase(promisedTrial: Bool, currentTrial: Bool) -> Bool {
-        !promisedTrial || currentTrial
+    /// Paid subscriptions must not silently apply a configured introductory offer.
+    static func supports(productID: String, hasIntroductoryOffer: Bool) -> Bool {
+        productIDs.contains(productID) && !hasIntroductoryOffer
     }
 }

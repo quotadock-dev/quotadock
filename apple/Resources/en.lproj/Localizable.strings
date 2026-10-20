@@ -256,12 +256,8 @@
 "Annual" = "Annual";
 "Billing period" = "Billing period";
 "Review with Apple" = "Review with Apple";
-"First month free, then %@ billed annually. Automatically renews." = "First month free, then %@ billed annually. Automatically renews.";
-"First month free, then %@ billed monthly. Automatically renews." = "First month free, then %@ billed monthly. Automatically renews.";
-"One introductory offer per Apple subscription group." = "One introductory offer per Apple subscription group.";
-"Billed annually. Automatically renews." = "Billed annually. Automatically renews.";
-"Billed monthly. Automatically renews." = "Billed monthly. Automatically renews.";
-"Start first month free" = "Start first month free";
+"Charged at purchase. Automatically renews annually." = "Charged at purchase. Automatically renews annually.";
+"Charged at purchase. Automatically renews monthly." = "Charged at purchase. Automatically renews monthly.";
 "Subscription offer changed. Reload products before purchasing." = "Subscription offer changed. Reload products before purchasing.";
 "Subscriptions are charged to your Apple account and automatically renew. Cancel in Apple subscription settings before the next renewal. Deleting your cloud account does not cancel your Apple subscription." = "Subscriptions are charged to your Apple account and automatically renew. Cancel in Apple subscription settings before the next renewal. Deleting your cloud account does not cancel your Apple subscription.";
 "Account unavailable" = "Account unavailable";

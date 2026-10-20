@@ -26,13 +26,12 @@ export function PlansPage() {
         <h2 id={`plan-${plan.name}`}>QuotaDock {plan.name}</h2>
         <p className="plan-price">{plan.price} <span>{plan.period}</span></p>
         <ul>{plan.features.map(feature => <li key={feature}>{t(feature)}</li>)}</ul>
-        {plan.name === 'Plus' && <><p>{t('첫 1개월 무료 · 조건부 혜택')}</p><p>{t('혜택 적용 시 무료 1개월 후')} {price(2990)} {period} {t('자동 갱신')}</p>
-          <details className="trial-details"><summary>{t('무료 혜택 조건')}</summary><p>{t('Plus 월간·연간에만 적용되는 정책입니다. Apple에 1개월 무료 introductory offer가 설정되어 있고 구독 그룹 자격을 충족해야 합니다. Apple 구독 그룹당 introductory offer는 한 번만 이용할 수 있습니다. 이 웹은 현재 방문자의 자격을 확인하지 않습니다.')}</p></details></>}
+        {plan.name === 'Free' ? <p>{t('기간 제한 없이 무료')}</p> : <p>{t('첫 구매 시 결제:')} {price(plan.name === 'Plus' ? 2990 : 5990)} {period} · {t('자동 갱신')}</p>}
       </article>)}</div>
       <p className="plans-note">{t('새 관측에는 온라인 로컬 수집기가 필요해요. AI 서비스 요금은 별도예요.')}</p>
       <p className="plans-note">{t('QuotaDock Plus는 ChatGPT Plus가 아닙니다.')}</p>
       <details className="plan-terms"><summary>{t('결제 안내·약관')}</summary>
-        <p>{t('표시 가격은 KRW 요금제 안내입니다. 실제 가격과 혜택 적용 여부는 Apple StoreKit에서 확인합니다. 혜택 미적용 시 선택한 주기의 정가로 시작합니다.')}</p>
+        <p>{t('유료 구독은 무료 체험 없이 첫 구매부터 결제됩니다. 연간 요금은 첫 구매 시 1년 전액이 청구됩니다. 표시 가격은 KRW 안내이며 실제 가격은 Apple StoreKit에서 확인하세요.')}</p>
         <p>{t('선택한 월간 또는 연간 주기로 자동 갱신됩니다. Apple 구독 설정에서 해지하세요. 앱 계정 삭제는 구독 해지가 아닙니다.')}</p>
         <div className="plan-links"><a href="https://usage.mvtp.cloud/#privacy">{t('개인정보')}</a><a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/">{t('이용약관')}</a></div>
       </details>

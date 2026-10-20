@@ -6,7 +6,6 @@ struct SubscriptionOption: Identifiable {
     let price: String
     let tier: String
     var annual: Bool = false
-    var trial: Bool = false
 }
 
 // Presentation only: prices and purchase eligibility are supplied by StoreKit.
@@ -60,21 +59,13 @@ struct SubscriptionPanel: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text(DockL10n.format(option.annual ? "%@ / year" : "%@ / month", option.price))
                                     .font(.title2.weight(.semibold))
-                                if option.trial && tier == "plus" {
-                                    Text(DockL10n.format(option.annual ?
-                                        "First month free, then %@ billed annually. Automatically renews." :
-                                        "First month free, then %@ billed monthly. Automatically renews.", option.price))
-                                        .font(.subheadline)
-                                    Text(DockL10n.text("One introductory offer per Apple subscription group."))
-                                        .font(.caption).foregroundStyle(.secondary)
-                                } else {
-                                    Text(DockL10n.text(option.annual ? "Billed annually. Automatically renews." : "Billed monthly. Automatically renews."))
-                                        .font(.subheadline)
-                                }
+                                Text(DockL10n.text(option.annual ?
+                                    "Charged at purchase. Automatically renews annually." :
+                                    "Charged at purchase. Automatically renews monthly."))
+                                    .font(.subheadline)
                                 if available {
                                     Button { purchase(option.id) } label: {
-                                        Text(DockL10n.text(current ? "Review with Apple" :
-                                            option.trial && tier == "plus" ? "Start first month free" : "Subscribe"))
+                                        Text(DockL10n.text(current ? "Review with Apple" : "Subscribe"))
                                             .frame(maxWidth: .infinity, minHeight: 32)
                                     }
                                     .buttonStyle(.borderedProminent)
