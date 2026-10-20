@@ -195,7 +195,7 @@ test('only allowlisted transient HTTP and transport failures retry, at most thre
   assert.equal(tls.calls.length, 1);
 });
 
-test('absolute deadline, grant expiry and Retry-After bound retries', async () => {
+test('absolute deadline, grant expiry and Retry-After bound retries', async t => {
   for (const grant of [false, true]) {
     const io = transport(() => ({ hang: true }));
     const c = config();
@@ -208,6 +208,14 @@ test('absolute deadline, grant expiry and Retry-After bound retries', async () =
   const safe = transport((call, calls) => calls.length === 1 ? { status: 429, headers: { 'retry-after': '1' } } : {});
   await runOnce(config(), { requestFn: safe.requestFn });
   assert.ok(safe.calls[1].at - safe.calls[0].at >= 1000);
+  // Model an early timer wake-up without relaxing the server's minimum delay.
+  const setTimer = globalThis.setTimeout;
+  const earlyTimer = t.mock.method(globalThis, 'setTimeout', (callback, delay, ...args) =>
+    setTimer(callback, delay === 1000 ? 980 : delay, ...args));
+  const early = transport((call, calls) => calls.length === 1 ? { status: 429, headers: { 'retry-after': '1' } } : {});
+  await runOnce(config(), { requestFn: early.requestFn });
+  earlyTimer.mock.restore();
+  assert.ok(early.calls[1].at - early.calls[0].at >= 1000);
   for (const value of ['999999999999999999', secret, '1']) {
     const io = transport(() => ({ status: 503, headers: { 'retry-after': value } }));
     await assert.rejects(runOnce(config(), { requestFn: io.requestFn, operationTimeoutMs: 500 }), { message: 'service' });

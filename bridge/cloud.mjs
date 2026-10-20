@@ -11,7 +11,12 @@ import { providers } from './snapshot.mjs';
 
 const credential = /^[A-Za-z0-9_-]{43}$/;
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+const wait = async ms => {
+  const until = Date.now() + ms;
+  do {
+    await new Promise(resolve => setTimeout(resolve, Math.max(1, until - Date.now())));
+  } while (Date.now() < until);
+};
 export function origin(value) {
   const u = new URL(value);
   if (u.protocol !== 'https:' || u.username || u.password || u.search || u.hash || u.pathname !== '/') throw Error('configuration');
