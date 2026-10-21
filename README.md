@@ -84,6 +84,11 @@ The zero-dependency bridge invokes fixed CodexBar commands, caches results for 6
 
 Unknown values stay unknown (`null`), never synthetic zero. Only a measured zero means exhausted. Windows must not be summed. Reset times are information, not a promise of quota replenishment.
 
+An [experimental Amp CLI adapter](bridge/amp-cli.md) is available as a separate
+explicit local API. It preserves Agent/Orb/Free windows but is **not activated**
+in the dashboard, cloud or account bindings. Installed-version compatibility and
+independent account identity still need verification; its tests use fake tools.
+
 OpenAI's [current Codex plan guide](https://help.openai.com/en/articles/11369540-using-codex-with-your-chatgpt-plan) includes Free/Go, while its [pricing guide](https://learn.chatgpt.com/docs/pricing) notes surface/rollout restrictions. **Free is not automatically rejected.** Missing account eligibility or an unmeasurable quota remains Unknown; this app cannot infer eligibility from a failed lookup. Checked 2026-10-13; no real Free account test was performed.
 
 ## First run · 첫 실행
