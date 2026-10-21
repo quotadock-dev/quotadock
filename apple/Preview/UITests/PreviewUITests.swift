@@ -3,6 +3,113 @@ import XCTest
 // Only the isolated QD Preview app, never production or its persistence harness.
 // Device runs require a fresh preview installation authorized for UI testing.
 final class PreviewUITests: XCTestCase {
+    func testLowQuotaMarkersAreOptInIndependentAndExpireWithoutCollection() {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        defer { app.terminate() }
+        for korean in [false, true] {
+            for largest in [false, true] {
+                let variant = "\(korean ? "KO" : "EN")-alerts-\(largest ? "largest-dark" : "normal-light")"
+                app.launchArguments = ["--quota-alert-preview", korean ? "--language-ko-preview" : "--language-en-preview"]
+                    + (largest ? ["--history-largest-preview"] : [])
+                app.launch()
+                let context = app.staticTexts["quota-alert-preview-context"]
+                XCTAssertTrue(context.waitForExistence(timeout: 8))
+                let raw = XCTAttachment(string: context.label)
+                raw.name = variant + "-context"; raw.lifetime = .keepAlways; add(raw)
+                XCTAssertTrue(context.label.contains(korean ? "locale=ko" : "locale=en"))
+                XCTAssertTrue(context.label.contains(largest ? "type=accessibility5" : "type=large"))
+                XCTAssertTrue(context.label.contains(largest ? "scheme=dark" : "scheme=light"))
+                XCTAssertEqual(app.staticTexts["quota-alert-preview-notice"].label,
+                               korean ? "UI 프리뷰 · 샘플 데이터 전용" : "UI PREVIEW · sample data only")
+                let toggle = app.switches["quota-alerts-enabled"]
+                assertHistoryFullyReachable(toggle, in: app, name: variant + " off control")
+                XCTAssertEqual(toggle.value as? String, "0")
+                captureAlerts(app, variant + "-off")
+                toggle.tap()
+                let marker20 = korean ? "20% 이하로 관측됨" : "Observed at or below 20%"
+                let marker30 = korean ? "30% 이하로 관측됨" : "Observed at or below 30%"
+                func reading(_ label: String) -> XCUIElement {
+                    app.descendants(matching: .any).matching(NSPredicate(
+                        format: "label == %@ AND value != nil", label)).firstMatch
+                }
+                let session = reading(korean ? "세션" : "Session")
+                let weekly = reading(korean ? "주간" : "Weekly")
+                let credits = reading(korean ? "크레딧" : "Credits")
+                for (element, expected, marked) in [
+                    (session, korean ? "0% 남음" : "0% remaining", true),
+                    (weekly, korean ? "잔여량 알 수 없음" : "Remaining unknown", false),
+                    (credits, korean ? "20% 남음" : "20% remaining", false)
+                ] {
+                    assertHistoryFullyReachable(element, in: app, name: variant + " 20% " + expected)
+                    XCTAssertTrue((element.value as? String ?? "").hasPrefix(expected))
+                    XCTAssertEqual((element.value as? String ?? "").contains(marker20), marked)
+                    captureAlerts(app, variant + "-20-" + element.label)
+                }
+                // 20.001% rounds to 20% on screen, but must not mark at 20%.
+                // A larger threshold must mark that same independent window.
+                scrollAlertsToTop(app)
+                let picker = app.buttons["quota-alert-threshold"]
+                assertHistoryFullyReachable(picker, in: app, name: variant + " threshold control")
+                picker.tap(); app.buttons["30%"].tap()
+                app.terminate(); app.launch()
+                XCTAssertTrue(toggle.waitForExistence(timeout: 8))
+                XCTAssertEqual(toggle.value as? String, "1")
+                for element in [session, credits] {
+                    assertHistoryFullyReachable(element, in: app, name: variant + " restored 30% " + element.label)
+                    XCTAssertTrue((element.value as? String ?? "").contains(marker30))
+                    captureAlerts(app, variant + "-30-" + element.label)
+                }
+                // Both are fresh and zero: only their demo/history role excludes them.
+                for label in [korean ? "일간" : "Daily", "Pro"] {
+                    let excluded = reading(label)
+                    assertHistoryFullyReachable(excluded, in: app, name: variant + " excluded " + label)
+                    XCTAssertTrue((excluded.value as? String ?? "").hasPrefix(korean ? "0% 남음" : "0% remaining"))
+                    XCTAssertFalse((excluded.value as? String ?? "").contains(marker30))
+                    captureAlerts(app, variant + "-excluded-" + label)
+                }
+                if !korean && !largest {
+                    scrollAlertsToTop(app)
+                    let expire = app.buttons["quota-alert-preview-expire"]
+                    assertHistoryFullyReachable(expire, in: app, name: variant + " expiry control")
+                    expire.tap()
+                    assertHistoryFullyReachable(session, in: app, name: variant + " before expiry")
+                    XCTAssertTrue((session.value as? String ?? "").contains(marker30))
+                    let expired = XCTNSPredicateExpectation(predicate: NSPredicate(
+                        format: "NOT (value CONTAINS %@)", marker30), object: session)
+                    XCTAssertEqual(XCTWaiter.wait(for: [expired], timeout: 25), .completed)
+                    XCTAssertTrue((session.value as? String ?? "").hasPrefix("0% remaining"))
+                    captureAlerts(app, variant + "-expired")
+                }
+                scrollAlertsToTop(app)
+                assertHistoryFullyReachable(toggle, in: app, name: variant + " disable control")
+                toggle.tap()
+                app.terminate(); app.launch()
+                XCTAssertTrue(toggle.waitForExistence(timeout: 8))
+                XCTAssertEqual(toggle.value as? String, "0")
+                assertHistoryFullyReachable(session, in: app, name: variant + " disabled reading")
+                XCTAssertFalse((session.value as? String ?? "").contains(marker30))
+                captureAlerts(app, variant + "-disabled")
+                app.terminate()
+            }
+        }
+    }
+
+    private func captureAlerts(_ app: XCUIApplication, _ name: String) {
+        capture(app, name)
+        let hierarchy = XCTAttachment(string: app.debugDescription)
+        hierarchy.name = name + "-AX"; hierarchy.lifetime = .keepAlways; add(hierarchy)
+    }
+
+    private func scrollAlertsToTop(_ app: XCUIApplication) {
+        let context = app.staticTexts["quota-alert-preview-context"]
+        for _ in 0..<12 {
+            if context.exists && context.isHittable && context.frame.minY > app.navigationBars.firstMatch.frame.maxY { return }
+            app.swipeDown()
+        }
+        XCTFail("Could not return to low-quota controls")
+    }
+
     func testHistoryPreservesIndependentReadingsAcrossLanguagesAndTextSizes() {
         continueAfterFailure = false
         let app = XCUIApplication()

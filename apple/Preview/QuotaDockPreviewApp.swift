@@ -10,7 +10,9 @@ struct QuotaDockPreviewApp: App {
     var body: some Scene {
         WindowGroup {
             Group {
-                if ProcessInfo.processInfo.arguments.contains("--history-preview") {
+                if ProcessInfo.processInfo.arguments.contains("--quota-alert-preview") {
+                    PreviewQuotaAlerts(settings: settings)
+                } else if ProcessInfo.processInfo.arguments.contains("--history-preview") {
                     PreviewHistory()
                 } else if needsSetup {
                     FirstRunView(settings: settings) { _ in needsSetup = false }
@@ -21,6 +23,50 @@ struct QuotaDockPreviewApp: App {
             .environment(\.locale, settings.locale)
             .tint(DockTheme.mint)
         }
+    }
+}
+
+private struct PreviewQuotaAlerts: View {
+    @ObservedObject var settings: InterfaceSettings
+    @State private var observedAt = Date()
+    private let largest = ProcessInfo.processInfo.arguments.contains("--history-largest-preview")
+
+    private func reading(_ id: ProviderID, windows: [QuotaWindow]) -> Provider {
+        Provider(id: id, name: id.displayName, plan: nil, state: .available, source: .codexbar,
+                 message: nil, observedAt: observedAt, windows: windows)
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                PreviewNotice(identifier: "quota-alert-preview-notice")
+                HistoryPreviewContext(identifier: "quota-alert-preview-context")
+                QuotaAlertControls(settings: settings)
+                Section("Synthetic current reading") {
+                    Button("Expire synthetic reading in 15 seconds") {
+                        observedAt = Date().addingTimeInterval(-885)
+                    }.accessibilityIdentifier("quota-alert-preview-expire")
+                    ProviderCard(provider: reading(.codex, windows: [
+                        QuotaWindow(id: "primary", label: "Session", remainingPercent: 0, resetsAt: nil),
+                        QuotaWindow(id: "secondary", label: "Weekly", remainingPercent: nil, resetsAt: nil),
+                        QuotaWindow(id: "tertiary", label: "Credits", remainingPercent: 20.001, resetsAt: nil)
+                    ]), demo: false, lowQuotaThreshold: settings.lowQuotaThreshold)
+                }
+                Section("Synthetic demo reading") {
+                    ProviderCard(provider: reading(.claude, windows: [
+                        QuotaWindow(id: "primary", label: "Daily", remainingPercent: 0, resetsAt: nil)
+                    ]), demo: true, lowQuotaThreshold: settings.lowQuotaThreshold)
+                }
+                CloudHistoryDetails(observations: [CloudHistoryObservation(
+                    observedAt: ISO8601DateFormatter().string(from: observedAt), observedDate: observedAt,
+                    reading: reading(.gemini, windows: [
+                        QuotaWindow(id: "primary", label: "Pro", remainingPercent: 0, resetsAt: nil)
+                    ]))])
+            }
+            .navigationTitle("Low-quota UI preview")
+        }
+        .dynamicTypeSize(largest ? .accessibility5 : .large)
+        .preferredColorScheme(largest ? .dark : .light)
     }
 }
 
@@ -48,10 +94,11 @@ private struct HistoryPreviewContext: View {
     @Environment(\.locale) private var locale
     @Environment(\.dynamicTypeSize) private var type
     @Environment(\.colorScheme) private var scheme
+    var identifier = "history-preview-context"
     var body: some View {
         let typeName = type == .accessibility5 ? "accessibility5" : type == .large ? "large" : "unexpected: \(String(describing: type))"
         Text("locale=\(locale.identifier); type=\(typeName); scheme=\(scheme == .dark ? "dark" : "light")")
-            .font(.caption).accessibilityIdentifier("history-preview-context")
+            .font(.caption).accessibilityIdentifier(identifier)
     }
 }
 

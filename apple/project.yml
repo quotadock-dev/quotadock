@@ -18,6 +18,7 @@ targetTemplates:
   shared:
     sources:
       - Shared/Snapshot.swift
+      - Shared/QuotaAlerts.swift
       - Shared/CacheFiles.swift
       - Shared/AccountSurface.swift
       - Shared/WatchTransfer.swift

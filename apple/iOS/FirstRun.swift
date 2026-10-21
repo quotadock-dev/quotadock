@@ -7,6 +7,8 @@ import WidgetKit
 final class InterfaceSettings: ObservableObject {
     @Published private(set) var language = DockL10n.selection()
     @Published private(set) var foregroundAutoRefresh = RefreshSettings.foregroundEnabled()
+    @Published private(set) var lowQuotaThreshold = QuotaAlerts.threshold()
+    @Published private(set) var quotaAlertSaveFailed = false
 
     init() {
         #if DEBUG
@@ -29,6 +31,11 @@ final class InterfaceSettings: ObservableObject {
     func chooseForegroundRefresh(_ enabled: Bool, persist: Bool = true) {
         foregroundAutoRefresh = enabled
         if persist { UserDefaults.standard.set(enabled, forKey: RefreshSettings.foregroundKey) }
+    }
+
+    func chooseLowQuotaThreshold(_ threshold: Int?) {
+        quotaAlertSaveFailed = !QuotaAlerts.save(threshold: threshold)
+        if !quotaAlertSaveFailed { lowQuotaThreshold = threshold }
     }
 
     var locale: Locale { Locale(identifier: DockL10n.resolved(language)) }
@@ -112,6 +119,27 @@ struct InterfaceLanguagePicker: View {
             Text("English").tag(DockLanguage.en)
             Text("한국어").tag(DockLanguage.ko)
         }.accessibilityIdentifier("interface-language")
+    }
+}
+
+struct QuotaAlertControls: View {
+    @ObservedObject var settings: InterfaceSettings
+    var body: some View {
+        Section {
+            Toggle(DockL10n.text("In-app low-quota markers"), isOn: Binding(
+                get: { settings.lowQuotaThreshold != nil },
+                set: { settings.chooseLowQuotaThreshold($0 ? 20 : nil) }))
+                .accessibilityIdentifier("quota-alerts-enabled")
+            if let threshold = settings.lowQuotaThreshold {
+                Picker(DockL10n.text("Low-quota threshold"), selection: Binding(
+                    get: { threshold }, set: { settings.chooseLowQuotaThreshold($0) })) {
+                    ForEach(QuotaAlerts.thresholds, id: \.self) { Text("\($0)%").tag($0) }
+                }.pickerStyle(.menu).accessibilityIdentifier("quota-alert-threshold")
+            }
+            if settings.quotaAlertSaveFailed { Text(DockL10n.text("Could not save this preference. The previous choice is retained.")) }
+        } footer: {
+            Text(DockL10n.text("Off by default. Marks independent current readings observed within 15 minutes, not unknown, demo or history. No notifications, background monitoring or new collection. Applies only on this iPhone; widgets and Watch are unchanged."))
+        }
     }
 }
 

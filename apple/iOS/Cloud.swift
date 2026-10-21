@@ -1562,6 +1562,7 @@ final class CloudModel: NSObject, ObservableObject, ASAuthorizationControllerDel
 struct CloudReadingsView: View {
     @Environment(\.locale) private var locale
     @ObservedObject var model: CloudModel
+    var lowQuotaThreshold: Int? = nil
     var body: some View {
         let _ = locale
         VStack(alignment: .leading, spacing: 16) {
@@ -1574,7 +1575,8 @@ struct CloudReadingsView: View {
             ForEach(model.snapshot?.accounts ?? []) { account in
                 let label = model.accountLabel(account.id)
                 ProviderCard(provider: account.reading, demo: model.snapshot?.demo == true,
-                    accountLabel: label.isEmpty ? String(account.id.uuidString.prefix(8)) : label)
+                    accountLabel: label.isEmpty ? String(account.id.uuidString.prefix(8)) : label,
+                    lowQuotaThreshold: lowQuotaThreshold)
                 if account.lastError != nil { Text(DockL10n.text("Last collection unavailable; original observation retained.")).font(.caption) }
             }
         }
@@ -1636,6 +1638,7 @@ struct CloudBatchPreview: View {
 struct CloudView: View {
     @Environment(\.locale) private var locale
     @ObservedObject var model: CloudModel
+    var lowQuotaThreshold: Int? = nil
     @State private var quotaStorageConsent = false
     @State private var collectorProcessingConsent = false
     @AppStorage("cloudTrustedBaseURL") private var base = "https://usage.mvtp.cloud"
@@ -1738,7 +1741,7 @@ struct CloudView: View {
             .scrollContentBackground(.hidden)
             .background(DockTheme.background)
             .sheet(isPresented: $showAccounts) {
-                CloudAccountsView(model: model).presentationDetents([.medium, .large])
+                CloudAccountsView(model: model, lowQuotaThreshold: lowQuotaThreshold).presentationDetents([.medium, .large])
             }
             .onChange(of: base) { _, _ in
                 quotaStorageConsent = false; collectorProcessingConsent = false

@@ -5,6 +5,7 @@ import UIKit
 struct CloudAccountsView: View {
     @ObservedObject var model: CloudModel
     var requestedAccountID: UUID? = nil
+    var lowQuotaThreshold: Int? = nil
     @State private var path: [UUID] = []
     @Environment(\.dismiss) private var dismiss
     @Environment(\.locale) private var locale
@@ -51,7 +52,7 @@ struct CloudAccountsView: View {
                 }
                 Section {
                     NavigationLink(DockL10n.text(model.session == nil ? "Connect with Apple" : "Connection settings")) {
-                        CloudView(model: model)
+                        CloudView(model: model, lowQuotaThreshold: lowQuotaThreshold)
                     }
                     NavigationLink(DockL10n.text("Plans")) { PlansView(model: model) }
                 }
@@ -61,7 +62,7 @@ struct CloudAccountsView: View {
             .navigationTitle(DockL10n.text("Accounts"))
             .navigationBarTitleDisplayMode(.large)
             .navigationDestination(for: UUID.self) { id in
-                CloudAccountDetailsView(model: model, accountID: id)
+                CloudAccountDetailsView(model: model, accountID: id, lowQuotaThreshold: lowQuotaThreshold)
             }
             .toolbar { Button(DockL10n.text("Done")) { dismiss() } }
             .refreshable { await model.read() }
@@ -80,6 +81,7 @@ private struct CloudAccountDetailsView: View {
     @ObservedObject var model: CloudModel
     @Environment(\.locale) private var locale
     let accountID: UUID
+    var lowQuotaThreshold: Int? = nil
     @State private var code = ""
     @State private var consentAuthority: String?
     @State private var confirmRemove = false
@@ -103,7 +105,7 @@ private struct CloudAccountDetailsView: View {
                 }
                 Section {
                     if let account = model.snapshot?.accounts.first(where: { $0.id == slot.id && $0.provider == slot.provider }) {
-                        ProviderCard(provider: account.reading, demo: model.snapshot?.demo == true)
+                        ProviderCard(provider: account.reading, demo: model.snapshot?.demo == true, lowQuotaThreshold: lowQuotaThreshold)
                             .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
                             .listRowBackground(Color.clear)
                         if account.lastError != nil {
@@ -155,7 +157,7 @@ private struct CloudAccountDetailsView: View {
                     }
                 }
                 Section {
-                    NavigationLink(DockL10n.text("Collector access")) { CloudView(model: model) }
+                    NavigationLink(DockL10n.text("Collector access")) { CloudView(model: model, lowQuotaThreshold: lowQuotaThreshold) }
                     Button(DockL10n.text("Remove account"), role: .destructive) {
                         removalAuthority = model.labelScope; confirmRemove = true
                     }
@@ -169,7 +171,7 @@ private struct CloudAccountDetailsView: View {
                     Button(DockL10n.text("Refresh")) { Task { await model.read() } }
                         .disabled(model.session == nil || model.busy)
                     NavigationLink(DockL10n.text(model.session == nil ? "Connect with Apple" : "Connection settings")) {
-                        CloudView(model: model)
+                        CloudView(model: model, lowQuotaThreshold: lowQuotaThreshold)
                     }
                 }
             }
