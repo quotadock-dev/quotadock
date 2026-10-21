@@ -23,6 +23,21 @@ The tests create temporary fake executables/logs and test timeout cleanup; they
 do not contact providers. Redaction is best-effort, not a guarantee for unknown
 upstream output formats. Review output locally before sharing.
 
+## Allowmark design guidance (Apache-2.0)
+
+Source: [Anthropic skills / frontend-design](https://github.com/anthropics/skills/tree/dbd4588f9e1033efb41dad4bef2f7947c8993d44/skills/frontend-design),
+revision `dbd4588f9e1033efb41dad4bef2f7947c8993d44`.
+The instruction text is adapted in `.agents/skills/designing-allowmark-ui/`.
+The skill names the upstream source and modifications; the unmodified upstream
+`LICENSE.txt` accompanies it. Both source files were reviewed before import.
+This is text-only design guidance: no executable scripts, MCP servers, plugins,
+package installation or credential access. Product accuracy and accessibility
+constraints take precedence over general aesthetic suggestions.
+
+The Allowmark endcap/span marks and app icon are original project artwork,
+covered by the repository's MIT license. They do not modify provider trademarks
+or imply that the new working name has received trademark clearance.
+
 ## External runtime
 
 CodexBar is installed independently by the user; its application/executable is

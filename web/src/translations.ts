@@ -4,7 +4,7 @@ export const english: Readonly<Record<string, string>> = {
   'AI 계정 최대 3개': 'Up to 3 AI accounts', 'AI 계정 최대 10개': 'Up to 10 AI accounts', 'AI 계정 최대 25개': 'Up to 25 AI accounts',
   '수집기 컴퓨터 최대 1대': 'Up to 1 collector computer', '수집기 컴퓨터 최대 3대': 'Up to 3 collector computers', '수집기 컴퓨터 최대 5대': 'Up to 5 collector computers',
   '기간 제한 없이 무료': 'Free with no time limit', '첫 구매 시 결제:': 'Charged at first purchase:', '자동 갱신': 'auto-renewing',
-  'QuotaDock Plus는 ChatGPT Plus가 아닙니다.': 'QuotaDock Plus is not ChatGPT Plus.',
+  'Allowmark Plus는 ChatGPT Plus가 아닙니다.': 'Allowmark Plus is not ChatGPT Plus.',
   '유료 구독은 무료 체험 없이 첫 구매부터 결제됩니다. 연간 요금은 첫 구매 시 1년 전액이 청구됩니다. 표시 가격은 KRW 안내이며 실제 가격은 Apple StoreKit에서 확인하세요.': 'Paid subscriptions are charged from the first purchase, with no free trial. Annual billing charges the full year at first purchase. Displayed prices are in KRW; confirm actual prices in Apple StoreKit.',
   '선택한 월간 또는 연간 주기로 자동 갱신됩니다. Apple 구독 설정에서 해지하세요. 앱 계정 삭제는 구독 해지가 아닙니다.': 'Renews automatically on the selected monthly or annual cycle. Cancel in Apple subscription settings; deleting the app account does not cancel billing.',
   '남은 여유, 한눈에.': 'Room to keep going, at a glance.',

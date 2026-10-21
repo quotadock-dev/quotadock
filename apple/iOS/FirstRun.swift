@@ -166,7 +166,11 @@ struct FirstRunView: View {
                             ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
                             : AnyLayout(HStackLayout())
                         headerLayout {
-                            Text("QUOTADOCK").font(.caption.weight(.semibold)).tracking(2)
+                            HStack(spacing: 8) {
+                                AllowmarkMark().fill(DockTheme.mint)
+                                    .frame(width: 24, height: 24).accessibilityHidden(true)
+                                Text(DockL10n.text("Allowmark")).font(.headline)
+                            }
                             if !previewTypeSize.isAccessibilitySize { Spacer() }
                             Text(setupFormat("Step %@ of 3", String(progress.step.index + 1)))
                                 .font(.caption).foregroundStyle(.secondary)

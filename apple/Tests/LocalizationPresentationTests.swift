@@ -3,6 +3,10 @@ import XCTest
 
 final class LocalizationPresentationTests: XCTestCase {
     func testExplicitLanguageLookupDoesNotFollowDeviceLanguage() {
+        XCTAssertEqual(DockL10n.text("Allowmark", language: "en"), "Allowmark")
+        XCTAssertEqual(DockL10n.text("Allowmark", language: "ko"), "얼로마크")
+        XCTAssertEqual(DockL10n.text("QuotaDock · remaining", language: "en"), "Allowmark · remaining")
+        XCTAssertEqual(DockL10n.text("QuotaDock · remaining", language: "ko"), "얼로마크 · 잔여량")
         XCTAssertEqual(DockL10n.text("Remaining unknown", language: "en"), "Remaining unknown")
         XCTAssertEqual(DockL10n.text("Remaining unknown", language: "ko"), "잔여량 알 수 없음")
         XCTAssertEqual(DockL10n.text("Restore purchases", language: "en"), "Restore purchases")

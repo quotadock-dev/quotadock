@@ -91,7 +91,7 @@ struct AccountSurfaceContent: View {
                 }.font(surface == .rectangular ? .caption2 : .caption)
             }
             if let remaining = window?.clampedRemaining {
-                ProgressView(value: remaining, total: 100).tint(DockTheme.mint).accessibilityHidden(true)
+                QuotaTrack(remaining: remaining)
             }
             if surface == .large, let reset = window?.resetsAt {
                 Text(reset <= date ? DockL10n.text("Reset passed · awaiting observation") :
@@ -197,8 +197,7 @@ struct WidgetQuotaBar: View {
                     .monospacedDigit().fixedSize()
             }.font(.caption)
             if let remaining = window.clampedRemaining {
-                ProgressView(value: remaining, total: 100).tint(DockTheme.mint)
-                    .accessibilityHidden(true)
+                QuotaTrack(remaining: remaining)
             }
         }
     }
@@ -230,7 +229,7 @@ struct OverviewWidgetContent: View {
                                 .foregroundStyle(.secondary).lineLimit(1)
                         }.font(.caption2)
                         if let remaining = window?.clampedRemaining {
-                            ProgressView(value: remaining, total: 100).tint(DockTheme.mint).accessibilityHidden(true)
+                            QuotaTrack(remaining: remaining)
                         }
                         if surface == .large {
                             Text(provider?.observedAt.map { DockL10n.format("Observed %@", DockL10n.date($0)) } ?? DockL10n.text("No observation"))

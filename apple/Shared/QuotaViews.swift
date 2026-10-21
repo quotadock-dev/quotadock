@@ -22,26 +22,56 @@ enum QuotaPresentation {
 }
 
 enum DockTheme {
-    static let graphite = Color(red: 16/255, green: 19/255, blue: 24/255)
+    static let graphite = Color(red: 16/255, green: 25/255, blue: 23/255)
     #if os(iOS)
     static let background = Color(uiColor: UIColor { traits in
-        traits.userInterfaceStyle == .dark ? UIColor(red: 16/255, green: 19/255, blue: 24/255, alpha: 1) : UIColor(red: 244/255, green: 246/255, blue: 249/255, alpha: 1)
+        traits.userInterfaceStyle == .dark ? UIColor(red: 16/255, green: 25/255, blue: 23/255, alpha: 1) : UIColor(red: 246/255, green: 246/255, blue: 241/255, alpha: 1)
     })
     static let surface = Color(uiColor: UIColor { traits in
-        traits.userInterfaceStyle == .dark ? UIColor(red: 27/255, green: 32/255, blue: 40/255, alpha: 1) : .white
+        traits.userInterfaceStyle == .dark ? UIColor(red: 24/255, green: 34/255, blue: 31/255, alpha: 1) : UIColor(red: 252/255, green: 252/255, blue: 248/255, alpha: 1)
     })
     static let border = Color(uiColor: UIColor { traits in
-        traits.userInterfaceStyle == .dark ? UIColor(red: 44/255, green: 53/255, blue: 67/255, alpha: 1) : UIColor(red: 225/255, green: 230/255, blue: 238/255, alpha: 1)
+        traits.userInterfaceStyle == .dark ? UIColor(red: 52/255, green: 66/255, blue: 60/255, alpha: 1) : UIColor(red: 218/255, green: 224/255, blue: 215/255, alpha: 1)
     })
     static let mint = Color(uiColor: UIColor { traits in
-        traits.userInterfaceStyle == .dark ? UIColor(red: 161/255, green: 181/255, blue: 255/255, alpha: 1) : UIColor(red: 52/255, green: 92/255, blue: 219/255, alpha: 1)
+        traits.userInterfaceStyle == .dark ? UIColor(red: 143/255, green: 218/255, blue: 190/255, alpha: 1) : UIColor(red: 20/255, green: 105/255, blue: 87/255, alpha: 1)
     })
     #else
     static let background = graphite
-    static let surface = Color(red: 27/255, green: 32/255, blue: 40/255)
-    static let border = Color(red: 44/255, green: 53/255, blue: 67/255)
-    static let mint = Color(red: 161/255, green: 181/255, blue: 255/255)
+    static let surface = Color(red: 24/255, green: 34/255, blue: 31/255)
+    static let border = Color(red: 52/255, green: 66/255, blue: 60/255)
+    static let mint = Color(red: 143/255, green: 218/255, blue: 190/255)
     #endif
+}
+
+// Original instrument mark: two endcaps and a remaining-line span. Decorative,
+// monochrome, and deliberately absent from cramped accessory surfaces.
+struct AllowmarkMark: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        for x in [0.125, 0.875] {
+            path.addRect(CGRect(x: rect.minX + rect.width * x - rect.width / 16,
+                                y: rect.minY + rect.height * 0.1875,
+                                width: rect.width / 8, height: rect.height * 0.625))
+        }
+        path.addRect(CGRect(x: rect.minX + rect.width * 0.125,
+                            y: rect.midY - rect.height / 16,
+                            width: rect.width * 0.5625, height: rect.height / 8))
+        return path
+    }
+}
+
+struct QuotaTrack: View {
+    let remaining: Double
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+                Capsule().fill(.primary.opacity(0.10))
+                Capsule().fill(DockTheme.mint)
+                    .frame(width: geometry.size.width * remaining / 100)
+            }
+        }.frame(height: 6).accessibilityHidden(true)
+    }
 }
 
 struct RemainingBar: View {
@@ -84,12 +114,7 @@ struct RemainingBar: View {
             .font(.caption)
             #endif
             if let remaining = window.clampedRemaining {
-                GeometryReader { geometry in
-                    ZStack(alignment: .leading) {
-                        Capsule().fill(.primary.opacity(0.10))
-                        Capsule().fill(DockTheme.mint).frame(width: geometry.size.width * remaining / 100)
-                    }
-                }.frame(height: 10).accessibilityHidden(true)
+                QuotaTrack(remaining: remaining)
             }
             if let reset = window.resetsAt {
                 Text(reset <= Date() ? DockL10n.text("Reset passed · awaiting observation") :

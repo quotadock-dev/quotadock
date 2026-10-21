@@ -89,7 +89,7 @@ private struct PreviewDashboard: View {
                 }.padding(20).frame(maxWidth: 680).frame(maxWidth: .infinity)
             }
             .background(DockTheme.background)
-            .navigationTitle("QuotaDock")
+            .navigationTitle(DockL10n.text("Allowmark"))
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 Button(setupText("Settings"), systemImage: "gearshape") { showSettings = true }

@@ -41,7 +41,7 @@ targetTemplates:
       - Widgets
     info:
       properties:
-        CFBundleDisplayName: QuotaDock
+        CFBundleDisplayName: Allowmark
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:
@@ -61,7 +61,7 @@ targets:
     info:
       path: Generated/iOS-Info.plist
       properties:
-        CFBundleDisplayName: QuotaDock
+        CFBundleDisplayName: Allowmark
         KeychainGroup: $(KEYCHAIN_GROUP)
         CloudKeychainGroup: $(AppIdentifierPrefix)$(BUNDLE_PREFIX).cloud
         CFBundleURLTypes:
@@ -104,7 +104,7 @@ targets:
     info:
       path: Generated/Watch-Info.plist
       properties:
-        CFBundleDisplayName: QuotaDock
+        CFBundleDisplayName: Allowmark
         WKApplication: true
         WKCompanionAppBundleIdentifier: $(BUNDLE_PREFIX)
     entitlements:

@@ -1,17 +1,33 @@
-# QuotaDock
+<p align="center"><img src="web/public/favicon.svg" width="72" height="72" alt="Allowmark logo: two endcaps and a remaining-line span" /></p>
+
+# Allowmark
 
 **Your AI allowance, at a glance — on iPhone, Apple Watch, and widgets.**
+
+**AI CLI, 얼마나 남았는지. 언제 확인한 숫자인지.**
+
+Formerly QuotaDock. Allowmark (얼로마크) is the working display name; repository,
+CLI, bundle, storage and protocol identifiers remain unchanged. Name, trademark
+and App Store availability have not been cleared.
 
 [![CI](https://github.com/quotadock-dev/quotadock/actions/workflows/ci.yml/badge.svg)](https://github.com/quotadock-dev/quotadock/actions)
 ![Source preview](https://img.shields.io/badge/v0.1.0-source_preview-orange)
 ![Node](https://img.shields.io/badge/Node.js-22-43853d)
 [![MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-QuotaDock turns the output of your **installed [CodexBar](https://github.com/steipete/CodexBar) CLI** into a small, authenticated snapshot. Provider credentials stay on the host. Clients receive remaining allowance, reset information, and freshness — not account identities.
+Allowmark turns the output of your **installed [CodexBar](https://github.com/steipete/CodexBar) CLI** into a small, authenticated snapshot. Provider credentials stay on the host. Clients receive remaining allowance, reset information, and freshness — not account identities.
 
 > **v0.1.0 SOURCE PREVIEW.** No App Store, TestFlight, signed installer, or production-readiness claim. [App + collector](https://github.com/quotadock-dev/quotadock) and [website](https://github.com/quotadock-dev/quotadock-web) are public; server implementation is private. Provider availability depends on CodexBar and your account. Cloud sign-in and purchases remain gated on Apple configuration and trusted HTTPS.
 
-![QuotaDock desktop web dashboard — demo data, not native iOS](docs/assets/dashboard-desktop.png)
+The Allowmark redesign uses long, aligned independent-window gauges, neutral
+light/dark surfaces and a teal accent. Unknown is not zero; stale readings keep
+their original observation time. The public demo also offers a measured-zero
+example, with a genuinely empty track. Brand changes do not migrate account data.
+
+<details>
+<summary>Historical pre-rebrand screenshots — synthetic demo data, not current Allowmark styling</summary>
+
+![Historical QuotaDock desktop web dashboard — demo data, not native iOS](docs/assets/dashboard-desktop.png)
 
 <details>
 <summary>Mobile web demo (Chromium touch emulation, not native iOS)</summary>
@@ -21,6 +37,8 @@ QuotaDock turns the output of your **installed [CodexBar](https://github.com/ste
 <details>
 <summary>Native iPhone demo (Xcode 16.4 simulator, sample data)</summary>
 <img src="docs/assets/native-demo.png" alt="Native QuotaDock app with provider icons, plans, remaining bars and explicit unknown readings" width="390" />
+</details>
+
 </details>
 
 ## How it works
@@ -97,7 +115,7 @@ last successful **source observation**, not the cache-read time. Automatic local
 collection defaults on and can be disabled independently of app-open refresh.
 An offline collector cannot produce fresh usage, even while the server is online.
 
-| QuotaDock plan | Accounts | Collector computers | Monthly / annual KRW |
+| Allowmark plan | Accounts | Collector computers | Monthly / annual KRW |
 |---|---:|---:|---|
 | Free | 3 | 1 | Free |
 | Plus | 10 | 3 | ₩2,990 / ₩29,900 |
@@ -233,18 +251,38 @@ certificates and uses loopback only, without provider accounts or cloud access.
 
 ```sh
 npm ci --ignore-scripts
-npx playwright install --with-deps chromium
+npx playwright install --with-deps chromium webkit
 npm test
 python3 .agents/skills/checking-codexbar-usage/scripts/test_codexbar.py
 ```
 
 `npm test` strictly typechecks and builds the React dashboard, runs the bridge
-contracts, then Chromium browser contracts against the built bridge. Those
+contracts, then Chromium and WebKit browser contracts against the built bridge.
+For one installed browser, use `npm test -- --project=chromium` or
+`npm run test:web -- --project=webkit` after building. Those
 check safe pairing, cache preservation, disconnect races, deadlines, background
 pause and keyboard controls. `web-dist/` is generated, not committed; direct
 `node bridge/cli.mjs serve` requires `npm run build` first. Collector-only commands
 do not require a frontend build. Linux browser tests do not verify native iOS.
 
-See [contributing](CONTRIBUTING.md), [security reporting](SECURITY.md), [changelog](CHANGELOG.md), and [third-party notices](THIRD_PARTY_NOTICES.md). Use the issue forms for reproducible bugs or focused proposals; never paste raw provider diagnostics or credentials. Repository-local skills provide read-only CodexBar inspection and safe QuotaDock verification; they are not installed globally.
+The 2026-10-21 Allowmark web increment passed 62 bridge UI cases across Chromium
+and WebKit, plus 55 Node contracts with one existing root-only skip, in the local
+Playwright container. The separate public site passed 22 cases in each browser.
+These are web/source checks, not real provider, physical-device or purchase
+acceptance. Screenshots were captured but image-tool quota prevented visual
+inspection; DOM, accessibility, reflow and contrast checks are not a substitute
+for that remaining review.
 
-Licensed under [MIT](LICENSE). QuotaDock is independent of CodexBar and the AI providers; provider names belong to their respective owners.
+The frozen 2026-10-21 native redesign passed a fresh four-target build and
+116 simulator tests: 110 hosted units, four original onboarding flows, one
+isolated preview and one disposable capture flow. Widget/Watch captures are
+iPhone-hosted shared views, not installed WidgetKit or paired-Watch acceptance.
+The purchase preview has no product catalogue. Captures were not visually
+inspected because of the image-tool limit. Later security/support native changes
+are excluded from that result; see [native verification](apple/README.md#architecture-and-verification).
+
+See [contributing](CONTRIBUTING.md), [security reporting](SECURITY.md), [changelog](CHANGELOG.md), and [third-party notices](THIRD_PARTY_NOTICES.md). Use the issue forms for reproducible bugs or focused proposals; never paste raw provider diagnostics or credentials. Repository-local skills provide read-only CodexBar inspection, safe QuotaDock verification and [Allowmark design guidance](.agents/skills/designing-allowmark-ui/SKILL.md); they are not installed globally.
+
+Original code is licensed under [MIT](LICENSE). Imported skills/assets retain their
+own licenses in [third-party notices](THIRD_PARTY_NOTICES.md). Allowmark is independent
+of CodexBar and the AI providers; provider names belong to their respective owners.

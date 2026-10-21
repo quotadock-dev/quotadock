@@ -150,8 +150,10 @@ test('cross-origin, userinfo, path, query and fragment rejected before bearer se
 test('stale/unknown and private vocabulary never become measured zero', async ({ page }) => {
   const s = snapshot(); s.providers[0].observedAt = '2026-01-01T00:00:00.000Z';
   await page.route('**/v1/snapshot', r => r.fulfill({ json: s })); await page.goto('/'); await pair(page); await expect(page.locator('.provider').first()).toContainText('STALE');
+  if (process.env.CAPTURE_DASHBOARD) await page.screenshot({ path: '.amp/in/artifacts/allowmark-stale.png', fullPage: true });
   await page.unroute('**/v1/snapshot'); await page.route('**/v1/snapshot', r => r.fulfill({ json: { ...s, providers: [{ ...s.providers[0], plan: 'private@example.test', state: 'error', windows: [{ label: 'private diagnostic', remainingPercent: 99, resetsAt: null }] }] } }));
   await page.locator('#refresh').click(); await expect(page.getByRole('progressbar')).toHaveCount(0); await expect(page.locator('#providers')).not.toContainText('private'); await expect(page.locator('.provider').first()).toContainText('알 수 없음');
+  if (process.env.CAPTURE_DASHBOARD) await page.screenshot({ path: '.amp/in/artifacts/allowmark-unknown.png', fullPage: true });
 });
 test('disconnect cancels late response and reconnect isolates generations', async ({ page }) => {
   let release: (() => void) | undefined;
@@ -351,6 +353,29 @@ test('demo desktop/mobile appearance, icons and unknown Grok', async ({ page }) 
   if (process.env.CAPTURE_DASHBOARD) await page.screenshot({ path: '.amp/in/artifacts/dashboard-demo-ko-320-root-200.png', fullPage: true });
 });
 
+test('Allowmark instrument reflows in both themes without inventing unpaired readings', async ({ page }, testInfo) => {
+  for (const colorScheme of ['light', 'dark'] as const) {
+    await page.emulateMedia({ colorScheme });
+    for (const width of [320, 1440]) {
+      await page.setViewportSize({ width, height: 1000 });
+      for (const path of ['/', '/?demo=1']) {
+        await page.goto(path);
+        await expect(page.locator('.brand')).toHaveText('Allowmark');
+        await expect(page).toHaveTitle(/Allowmark/);
+        await expect(page.getByRole('progressbar')).toHaveCount(path === '/' ? 0 : 6);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+        if (width === 1440 && path !== '/') {
+          const bars = await page.getByRole('progressbar').evaluateAll(elements => elements.map(element => element.getBoundingClientRect()));
+          expect(bars.every(bar => Math.abs(bar.x - bars[0].x) < 1 && bar.width > 600)).toBe(true);
+        }
+        if (process.env.CAPTURE_DASHBOARD) await page.screenshot({ path: `.amp/in/artifacts/allowmark-${testInfo.project.name}-${path === '/' ? 'default' : 'demo'}-${width}-${colorScheme}.png`, fullPage: true });
+        await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      }
+    }
+  }
+});
+
 test('plans stay read-only, bilingual and concise without collecting paired quota', async ({ page }) => {
   const quotaRequests: string[] = [];
   page.on('request', request => { if (request.url().includes('/v1/snapshot')) quotaRequests.push(request.url()); });
@@ -365,8 +390,8 @@ test('plans stay read-only, bilingual and concise without collecting paired quot
       await page.locator('header select').selectOption(language);
       await expect(page.getByRole('heading', { name: language === 'ko' ? '요금제' : 'Plans', exact: true })).toBeVisible();
       await expect(page.getByRole('article')).toHaveCount(3);
-      const plus = page.getByRole('article', { name: 'QuotaDock Plus', exact: true });
-      const pro = page.getByRole('article', { name: 'QuotaDock Pro', exact: true });
+      const plus = page.getByRole('article', { name: 'Allowmark Plus', exact: true });
+      const pro = page.getByRole('article', { name: 'Allowmark Pro', exact: true });
       for (const cycle of ['month', 'year']) {
         await page.getByRole('combobox', { name: language === 'ko' ? '결제 주기' : 'Billing cycle' }).selectOption(cycle);
         await expect(plus.locator('.plan-price')).toContainText(cycle === 'month' ? '2,990' : '29,900');
@@ -378,7 +403,7 @@ test('plans stay read-only, bilingual and concise without collecting paired quot
           await expect(payment).toContainText(language === 'ko' ? '자동 갱신' : 'auto-renewing');
           await expect(payment).toContainText(language === 'ko' ? cycle === 'month' ? '/ 월' : '/ 년' : cycle === 'month' ? '/ month' : '/ year');
         }
-        await expect(page.getByRole('article', { name: 'QuotaDock Free', exact: true })).toContainText(language === 'ko' ? '기간 제한 없이 무료' : 'Free with no time limit');
+        await expect(page.getByRole('article', { name: 'Allowmark Free', exact: true })).toContainText(language === 'ko' ? '기간 제한 없이 무료' : 'Free with no time limit');
         await expect(page.locator('main')).not.toContainText(/1개월 무료|1 month free|introductory offer|무료 1개월 후|after 1 free month|혜택 적용|offer eligibility/);
         await expect(page.locator('.trial-details')).toHaveCount(0);
         await expect(page.locator('.plan-terms')).toContainText(language === 'ko' ? '무료 체험 없이 첫 구매부터 결제' : 'charged from the first purchase, with no free trial');

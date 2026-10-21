@@ -295,6 +295,18 @@ Graphite/mint bars mean **remaining**, clamped to 0–100, never summed. Null is
 
 ## Architecture and verification
 
+The frozen 2026-10-21 Allowmark redesign passed a fresh iPhone, iOS-widget,
+Watch and Watch-widget build, 110 hosted units, four original production UI
+flows, one isolated original preview and one disposable capture UI flow:
+**116 passed, zero failures/skips**. EN/KO light/dark onboarding/dashboard
+captures and accessibility transcripts were exported. Image-tool quota blocked
+visual inspection, so these captures do not constitute visual approval.
+Widget/Watch views were iPhone-hosted shared previews, not installed extensions
+or Watch transport. The purchase preview correctly has empty options and
+Price unavailable; no catalogue, account or purchase was exercised. Historical
+optional StoreKit fixture failures remain historical failures. Later native
+security/support/operator changes are **not covered** by this frozen result.
+
 The 2026-10-17 isolated Mac validation compiled the final iPhone, iOS widget,
 Watch and Watch-widget targets with Xcode 27.1. All **110 hosted native units,
 four production onboarding UI tests and 31 macOS Foundation contracts** passed.

@@ -230,7 +230,7 @@ struct DockView: View {
                 .frame(maxWidth: 680)
                 .frame(maxWidth: .infinity)
             }.background(DockTheme.background)
-                .navigationTitle("QuotaDock")
+                .navigationTitle(DockL10n.text("Allowmark"))
                 .navigationBarTitleDisplayMode(.large)
                 .refreshable { await model.refresh() }
                 .toolbar {

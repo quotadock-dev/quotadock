@@ -14,7 +14,7 @@ struct AccountWatchContent: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
-                Text("QuotaDock").font(.headline)
+                Text(DockL10n.text("Allowmark")).font(.headline)
                 Picker(DockL10n.text("Account"), selection: $selected) {
                     Text(DockL10n.text("Choose account")).tag("")
                     // Preserve the stored missing selection rather than retargeting it.
@@ -93,7 +93,7 @@ struct WatchContent: View {
         let _ = locale
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
-                Text("QuotaDock").font(.headline)
+                Text(DockL10n.text("Allowmark")).font(.headline)
                 if demo || snapshot?.demo == true {
                     Text(DockL10n.text("DEMO · sample data, not live usage")).foregroundStyle(DockTheme.mint)
                 }

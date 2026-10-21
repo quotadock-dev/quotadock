@@ -11,7 +11,7 @@
 "Cancel" = "취소";
 "Your AI allowances, together. Keep each account and quota window separate, with the original observation time." = "AI 서비스의 사용 한도를 한곳에서 확인하세요. 각 계정과 한도 기간은 구분하며, 원래 측정 시각을 함께 표시합니다.";
 "Your provider credentials stay on your computer." = "서비스 로그인 정보는 컴퓨터에 남습니다.";
-"A local CodexBar collector reads supported accounts. QuotaDock receives sanitized usage, not your Claude, OpenAI, Gemini or Grok password." = "로컬 CodexBar 수집기가 지원되는 계정을 읽습니다. QuotaDock은 민감한 정보를 제거한 사용량을 받으며, Claude, OpenAI, Gemini 또는 Grok 비밀번호는 받지 않습니다.";
+"A local CodexBar collector reads supported accounts. QuotaDock receives sanitized usage, not your Claude, OpenAI, Gemini or Grok password." = "로컬 CodexBar 수집기가 지원되는 계정을 읽습니다. 얼로마크는 민감한 정보를 제거한 사용량을 받으며, Claude, OpenAI, Gemini 또는 Grok 비밀번호는 받지 않습니다.";
 "Unknown is not zero." = "알 수 없음은 0이 아닙니다.";
 "When a provider cannot report usage, we show Unknown. Reset times are information, not a promise of more quota." = "서비스에서 사용량을 제공하지 못하면 ‘알 수 없음’으로 표시합니다. 초기화 시각은 참고 정보이며, 한도 추가를 보장하지 않습니다.";
 "No provider login, payment or system permission is requested during setup." = "초기 설정에서는 서비스 로그인, 결제 또는 시스템 권한을 요청하지 않습니다.";
@@ -29,7 +29,7 @@
 "Refresh when I open the app" = "앱을 열 때 새로고침";
 "On by default. Turn it off to use the refresh button or pull to refresh. Changing this does not change your collector's background setting or spend a manual refresh allowance." = "기본적으로 켜져 있습니다. 끄면 새로고침 버튼을 누르거나 아래로 당겨 새로고침하세요. 이 설정을 변경해도 수집기의 백그라운드 설정은 바뀌지 않으며 수동 새로고침 횟수도 소모하지 않습니다.";
 "Widgets remember the last reading." = "위젯은 마지막 측정값을 표시합니다.";
-"Add QuotaDock from the Home Screen, Today View or Lock Screen widget gallery after setup. iOS decides when to refresh widgets; exact intervals are not guaranteed." = "설정 후 홈 화면, 오늘 보기 또는 잠금 화면의 위젯 갤러리에서 QuotaDock을 추가하세요. 위젯 새로고침 시점은 iOS가 결정하므로 정확한 간격은 보장되지 않습니다.";
+"Add QuotaDock from the Home Screen, Today View or Lock Screen widget gallery after setup. iOS decides when to refresh widgets; exact intervals are not guaranteed." = "설정 후 홈 화면, 오늘 보기 또는 잠금 화면의 위젯 갤러리에서 얼로마크를 추가하세요. 위젯 새로고침 시점은 iOS가 결정하므로 정확한 간격은 보장되지 않습니다.";
 "Watch follows your iPhone." = "Watch는 iPhone의 데이터를 받습니다.";
 "Install the companion Watch app, open both apps and refresh on iPhone. Transfers may be delayed. Small surfaces show the first account per provider, not account totals." = "Watch용 앱을 설치하고 두 앱을 모두 연 뒤 iPhone에서 새로고침하세요. 전송이 지연될 수 있습니다. 작은 표시 영역에는 서비스별 첫 번째 계정이 표시되며, 계정 합계가 아닙니다.";
 "You stay in control." = "선택은 언제나 직접 관리합니다.";

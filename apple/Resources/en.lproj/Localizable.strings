@@ -59,12 +59,13 @@
 "Cached · first account · first 2 windows" = "Cached · first account · first 2 windows";
 "Cached · first account / window" = "Cached · first account / window";
 "Not total ChatGPT usage" = "Not total ChatGPT usage";
-"First cached account; compact widgets show the first window. %@. Open QuotaDock for all accounts. Codex is not total ChatGPT usage." = "First cached account; compact widgets show the first window. %@. Open QuotaDock for all accounts. Codex is not total ChatGPT usage.";
-"QuotaDock · remaining" = "QuotaDock · remaining";
+"First cached account; compact widgets show the first window. %@. Open QuotaDock for all accounts. Codex is not total ChatGPT usage." = "First cached account; compact widgets show the first window. %@. Open Allowmark for all accounts. Codex is not total ChatGPT usage.";
+"Allowmark" = "Allowmark";
+"QuotaDock · remaining" = "Allowmark · remaining";
 "No observation" = "No observation";
 "Cached · first account / window per provider" = "Cached · first account / window per provider";
-"Codex is not total ChatGPT usage. Open QuotaDock for all accounts and windows." = "Codex is not total ChatGPT usage. Open QuotaDock for all accounts and windows.";
-"Cached first account per provider. Open QuotaDock for all accounts and windows." = "Cached first account per provider. Open QuotaDock for all accounts and windows.";
+"Codex is not total ChatGPT usage. Open QuotaDock for all accounts and windows." = "Codex is not total ChatGPT usage. Open Allowmark for all accounts and windows.";
+"Cached first account per provider. Open QuotaDock for all accounts and windows." = "Cached first account per provider. Open Allowmark for all accounts and windows.";
 "All AI allowances" = "All AI allowances";
 "First quota window per provider. Codex is not total ChatGPT usage. Open the app for all windows and reset times." = "First quota window per provider. Codex is not total ChatGPT usage. Open the app for all windows and reset times.";
 "%@ · %@ slots · auto %d min · early %@ · Live %d/%d %@" = "%@ · %@ slots · auto %d min · early %@ · Live %d/%d %@";
@@ -162,7 +163,7 @@
 "Server rate limit reached. Wait before trying again. Original observations retained." = "Server rate limit reached. Wait before trying again. Original observations retained.";
 "Your verified tier's provider-slot limit is reached." = "Your verified tier's provider-slot limit is reached.";
 "Request refused or temporarily unavailable. Original observations retained." = "Request refused or temporarily unavailable. Original observations retained.";
-"QuotaDock subscriptions" = "QuotaDock subscriptions";
+"QuotaDock subscriptions" = "Allowmark subscriptions";
 "Subscription status: %@" = "Subscription status: %@";
 "10 accounts · hourly · 5 Live sessions per subscription period" = "10 accounts · hourly · 5 Live sessions per subscription period";
 "Unlimited account registration · 20–120 minutes · 5 Live sessions per KST day" = "Unlimited account registration · 20–120 minutes · 5 Live sessions per KST day";

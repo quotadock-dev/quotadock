@@ -59,12 +59,13 @@
 "Cached · first account · first 2 windows" = "캐시 · 첫 계정 · 처음 2개 구간";
 "Cached · first account / window" = "캐시 · 첫 계정 / 구간";
 "Not total ChatGPT usage" = "전체 ChatGPT 사용량이 아님";
-"First cached account; compact widgets show the first window. %@. Open QuotaDock for all accounts. Codex is not total ChatGPT usage." = "캐시된 첫 계정이며 작은 위젯은 첫 구간만 표시합니다. %@. 모든 계정은 QuotaDock에서 확인하세요. Codex는 전체 ChatGPT 사용량이 아닙니다.";
-"QuotaDock · remaining" = "QuotaDock · 잔여량";
+"First cached account; compact widgets show the first window. %@. Open QuotaDock for all accounts. Codex is not total ChatGPT usage." = "캐시된 첫 계정이며 작은 위젯은 첫 구간만 표시합니다. %@. 모든 계정은 얼로마크에서 확인하세요. Codex는 전체 ChatGPT 사용량이 아닙니다.";
+"Allowmark" = "얼로마크";
+"QuotaDock · remaining" = "얼로마크 · 잔여량";
 "No observation" = "관측값 없음";
 "Cached · first account / window per provider" = "캐시 · 제공업체별 첫 계정 / 구간";
-"Codex is not total ChatGPT usage. Open QuotaDock for all accounts and windows." = "Codex는 전체 ChatGPT 사용량이 아닙니다. 모든 계정과 구간은 QuotaDock에서 확인하세요.";
-"Cached first account per provider. Open QuotaDock for all accounts and windows." = "제공업체별 캐시된 첫 계정입니다. 모든 계정과 구간은 QuotaDock에서 확인하세요.";
+"Codex is not total ChatGPT usage. Open QuotaDock for all accounts and windows." = "Codex는 전체 ChatGPT 사용량이 아닙니다. 모든 계정과 구간은 얼로마크에서 확인하세요.";
+"Cached first account per provider. Open QuotaDock for all accounts and windows." = "제공업체별 캐시된 첫 계정입니다. 모든 계정과 구간은 얼로마크에서 확인하세요.";
 "All AI allowances" = "모든 AI 할당량";
 "First quota window per provider. Codex is not total ChatGPT usage. Open the app for all windows and reset times." = "제공업체별 첫 할당량 구간입니다. Codex는 전체 ChatGPT 사용량이 아닙니다. 모든 구간과 초기화 시각은 앱에서 확인하세요.";
 "%@ · %@ slots · auto %d min · early %@ · Live %d/%d %@" = "%@ · 슬롯 %@ · 자동 %d분 · 조기 %@ · Live %d/%d %@";
@@ -162,7 +163,7 @@
 "Server rate limit reached. Wait before trying again. Original observations retained." = "서버 요청 한도에 도달했습니다. 잠시 기다린 후 재시도하세요. 원래 관측값은 유지됩니다.";
 "Your verified tier's provider-slot limit is reached." = "검증된 등급의 제공업체 슬롯 한도에 도달했습니다.";
 "Request refused or temporarily unavailable. Original observations retained." = "요청이 거부되었거나 일시적으로 불가능합니다. 원래 관측값은 유지됩니다.";
-"QuotaDock subscriptions" = "QuotaDock 구독";
+"QuotaDock subscriptions" = "얼로마크 구독";
 "Subscription status: %@" = "구독 상태: %@";
 "10 accounts · hourly · 5 Live sessions per subscription period" = "계정 10개 · 1시간 간격 · 구독 기간당 Live 5회";
 "Unlimited account registration · 20–120 minutes · 5 Live sessions per KST day" = "계정 등록 무제한 · 20–120분 간격 · 한국 시간 하루 Live 5회";

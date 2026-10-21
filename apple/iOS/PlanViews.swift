@@ -39,7 +39,7 @@ struct SubscriptionPanel: View {
                 let current = currentTier == tier
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        Text(tier == "free" ? DockL10n.text("Free") : "QuotaDock \(tier.capitalized)").font(.title3.bold())
+                        Text(tier == "free" ? DockL10n.text("Free") : "\(DockL10n.text("Allowmark")) \(tier.capitalized)").font(.title3.bold())
                         Spacer()
                         if current {
                             Text(DockL10n.text("Current plan"))

@@ -171,7 +171,7 @@ final class OnboardingUITests: XCTestCase {
         // Foreground refresh was disabled, so this launch does not request a network refresh.
         app.launchArguments = []
         app.launch()
-        XCTAssertTrue(app.navigationBars["QuotaDock"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars[startKorean ? "얼로마크" : "Allowmark"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.staticTexts["setup-heading"].exists, "Completion must survive Cancel and relaunch")
         openSettings(korean: startKorean)
         assertSavedRefresh(korean: startKorean, value: "0")

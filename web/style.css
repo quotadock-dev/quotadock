@@ -1,23 +1,23 @@
 :root {
   color-scheme: light dark;
-  --bg: #F4F6F9;
-  --surface: #fff;
-  --ink: #151C2C;
-  --muted: #596579;
-  --line: #E1E6EE;
-  --accent: #345CDB;
-  --track: #E1E6EE;
+  --bg: #f5f3ed;
+  --surface: #fdfcf8;
+  --ink: #222b29;
+  --muted: #5b6661;
+  --line: #d5dad3;
+  --accent: #17685c;
+  --track: #dce4de;
   --warning: #87501C;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #101318;
-    --surface: #1B2028;
-    --ink: #F4F6F9;
-    --muted: #AAB4C4;
-    --line: #2C3543;
-    --accent: #A1B5FF;
-    --track: #2C3543;
+    --bg: #151a18;
+    --surface: #1c2320;
+    --ink: #eff1e9;
+    --muted: #afbcb4;
+    --line: #39453e;
+    --accent: #8dd9c6;
+    --track: #394b43;
     --warning: #F2BC84;
   }
   .provider-icon { filter: invert(1); }
@@ -111,6 +111,9 @@ input:not([type="checkbox"]) {
   border-bottom: 1px solid var(--line);
 }
 .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: -0.6px;
@@ -246,21 +249,21 @@ p {
 #language-save-status:empty {
   margin: 0;
 }
-.providers { display: grid; gap: 16px; margin: 20px 0 32px; }
+.providers { display: grid; gap: 0; margin: 20px 0 32px; border-bottom: 1px solid var(--line); }
 .provider {
-  padding: 28px;
+  padding: 28px 24px;
   background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 20px;
+  border-top: 1px solid var(--line);
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 24px;
+  grid-template-columns: minmax(140px, 0.7fr) minmax(0, 2fr);
+  gap: 32px;
 }
 .provider-header {
   min-width: 0;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  flex-direction: column;
   gap: 12px;
 }
 .provider-header > .badge {
@@ -296,6 +299,8 @@ p {
 }
 .window {
   margin: 0 0 20px;
+  padding-inline: 8px;
+  border-inline: 2px solid var(--line);
 }
 .window-heading {
   display: flex;
@@ -317,10 +322,10 @@ p {
   appearance: none;
   display: block;
   width: 100%;
-  height: 10px;
+  height: 6px;
   border: 0;
   background: var(--track);
-  border-radius: 5px;
+  border-radius: 0;
   overflow: hidden;
 }
 .track::-webkit-progress-bar {
@@ -392,6 +397,7 @@ footer > a {
   .provider {
     grid-template-columns: minmax(0, 1fr);
     gap: 12px;
+    padding: 22px 16px;
   }
   .provider-header {
     display: flex;
@@ -399,6 +405,7 @@ footer > a {
     justify-content: space-between;
     gap: 8px;
     flex-wrap: wrap;
+    flex-direction: row;
   }
   .provider-header > .badge {
     margin: 0;
@@ -420,7 +427,7 @@ footer > a {
 .plans-heading { display: flex; align-items: baseline; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
 .plans-heading h1 { margin: 0; }
 .plan-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-.plan-card { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 24px; display: flex; flex-direction: column; align-items: flex-start; }
+.plan-card { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 24px; display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
 .plan-card h2 { font-size: 1.25rem; }
 .plan-price { font-size: 1.65rem; font-weight: 650; margin: 12px 0; letter-spacing: -0.6px; }
 .plan-price span { font-size: 0.8rem; font-weight: 400; color: var(--muted); letter-spacing: 0; }

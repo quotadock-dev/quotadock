@@ -26,7 +26,7 @@ jobs:
           node-version: '22'
       - run: npm ci --ignore-scripts
       - run: npx playwright install --with-deps chromium
-      - run: npm test
+      - run: npm test -- --project=chromium
       - run: python3 .agents/skills/checking-codexbar-usage/scripts/test_codexbar.py
   webkit:
     name: macOS WebKit dashboard controls and language tests
@@ -43,7 +43,7 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npx playwright install --with-deps webkit
       - run: npm run build
-      - run: npm run test:web -- --browser=webkit
+      - run: npm run test:web -- --project=webkit
   storage:
     name: Non-root portable storage and bridge failure contracts
     runs-on: ubuntu-latest

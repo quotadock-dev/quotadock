@@ -11,7 +11,7 @@
 "Cancel" = "Cancel";
 "Your AI allowances, together. Keep each account and quota window separate, with the original observation time." = "Your AI allowances, together. Keep each account and quota window separate, with the original observation time.";
 "Your provider credentials stay on your computer." = "Your provider credentials stay on your computer.";
-"A local CodexBar collector reads supported accounts. QuotaDock receives sanitized usage, not your Claude, OpenAI, Gemini or Grok password." = "A local CodexBar collector reads supported accounts. QuotaDock receives sanitized usage, not your Claude, OpenAI, Gemini or Grok password.";
+"A local CodexBar collector reads supported accounts. QuotaDock receives sanitized usage, not your Claude, OpenAI, Gemini or Grok password." = "A local CodexBar collector reads supported accounts. Allowmark receives sanitized usage, not your Claude, OpenAI, Gemini or Grok password.";
 "Unknown is not zero." = "Unknown is not zero.";
 "When a provider cannot report usage, we show Unknown. Reset times are information, not a promise of more quota." = "When a provider cannot report usage, we show Unknown. Reset times are information, not a promise of more quota.";
 "No provider login, payment or system permission is requested during setup." = "No provider login, payment or system permission is requested during setup.";
@@ -29,7 +29,7 @@
 "Refresh when I open the app" = "Refresh when I open the app";
 "On by default. Turn it off to use the refresh button or pull to refresh. Changing this does not change your collector's background setting or spend a manual refresh allowance." = "On by default. Turn it off to use the refresh button or pull to refresh. Changing this does not change your collector's background setting or spend a manual refresh allowance.";
 "Widgets remember the last reading." = "Widgets remember the last reading.";
-"Add QuotaDock from the Home Screen, Today View or Lock Screen widget gallery after setup. iOS decides when to refresh widgets; exact intervals are not guaranteed." = "Add QuotaDock from the Home Screen, Today View or Lock Screen widget gallery after setup. iOS decides when to refresh widgets; exact intervals are not guaranteed.";
+"Add QuotaDock from the Home Screen, Today View or Lock Screen widget gallery after setup. iOS decides when to refresh widgets; exact intervals are not guaranteed." = "Add Allowmark from the Home Screen, Today View or Lock Screen widget gallery after setup. iOS decides when to refresh widgets; exact intervals are not guaranteed.";
 "Watch follows your iPhone." = "Watch follows your iPhone.";
 "Install the companion Watch app, open both apps and refresh on iPhone. Transfers may be delayed. Small surfaces show the first account per provider, not account totals." = "Install the companion Watch app, open both apps and refresh on iPhone. Transfers may be delayed. Small surfaces show the first account per provider, not account totals.";
 "You stay in control." = "You stay in control.";
