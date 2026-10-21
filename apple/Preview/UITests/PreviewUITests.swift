@@ -56,9 +56,12 @@ final class PreviewUITests: XCTestCase {
                 app.terminate(); app.launch()
                 XCTAssertTrue(toggle.waitForExistence(timeout: 8))
                 XCTAssertEqual(toggle.value as? String, "1")
-                for element in [session, credits] {
-                    assertHistoryFullyReachable(element, in: app, name: variant + " restored 30% " + element.label)
-                    captureAlerts(app, variant + "-30-" + element.label, reading: element)
+                for label in [korean ? "세션" : "Session", korean ? "크레딧" : "Credits"] {
+                    let element = reading(label)
+                    // Form may not instantiate an offscreen large-text row yet.
+                    // Do not resolve its label before the reachability scroll.
+                    assertHistoryFullyReachable(element, in: app, name: variant + " restored 30% " + label)
+                    captureAlerts(app, variant + "-30-" + label, reading: element)
                     XCTAssertTrue((element.value as? String ?? "").contains(marker30))
                 }
                 // Both are fresh and zero: only their demo/history role excludes them.
