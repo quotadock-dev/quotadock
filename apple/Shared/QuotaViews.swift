@@ -77,6 +77,7 @@ struct QuotaTrack: View {
 struct RemainingBar: View {
     @Environment(\.locale) private var locale
     let window: QuotaWindow
+    var lowQuotaThreshold: Int? = nil
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private var remainingText: String {
@@ -116,6 +117,11 @@ struct RemainingBar: View {
             if let remaining = window.clampedRemaining {
                 QuotaTrack(remaining: remaining)
             }
+            if let lowQuotaThreshold {
+                Label(DockL10n.format("Observed at or below %@", "\(lowQuotaThreshold)%"), systemImage: "exclamationmark.triangle")
+                    .font(.caption).foregroundStyle(.primary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             if let reset = window.resetsAt {
                 Text(reset <= Date() ? DockL10n.text("Reset passed · awaiting observation") :
                     DockL10n.format("Reset: %@", DockL10n.date(reset)))
@@ -129,7 +135,8 @@ struct RemainingBar: View {
     }
 
     private var accessibilitySummary: String {
-        let remaining = remainingText.replacingOccurrences(of: "<0.01%", with: DockL10n.text("Less than 0.01 percent"))
+        var remaining = remainingText.replacingOccurrences(of: "<0.01%", with: DockL10n.text("Less than 0.01 percent"))
+        if let lowQuotaThreshold { remaining += ". " + DockL10n.format("Observed at or below %@", "\(lowQuotaThreshold)%") }
         guard let reset = window.resetsAt else { return remaining }
         return DockL10n.format("%@. Reset: %@", remaining, DockL10n.date(reset))
     }
@@ -137,9 +144,13 @@ struct RemainingBar: View {
 
 struct ProviderCard: View {
     @Environment(\.locale) private var locale
+    #if os(iOS)
+    @State private var quotaAlertNow = Date()
+    #endif
     let provider: Provider
     let demo: Bool
     var accountLabel: String? = nil
+    var lowQuotaThreshold: Int? = nil
     var body: some View {
         let _ = locale
         VStack(alignment: .leading, spacing: 16) {
@@ -177,7 +188,7 @@ struct ProviderCard: View {
                 Text(DockL10n.text(provider.observedAt == nil ? "Not observed" : "Stale · over 15 minutes old"))
                     .font(.caption).fontWeight(.semibold).foregroundStyle(.orange)
             }
-            ForEach(provider.displayWindows) { RemainingBar(window: $0) }
+            currentWindows
             if provider.windows.isEmpty { Text(DockL10n.text("Remaining unknown")).font(.caption) }
             if let observed = provider.observedAt {
                 Text(DockL10n.format("Observed %@", DockL10n.date(observed))).font(.caption).foregroundStyle(.secondary)
@@ -197,5 +208,39 @@ struct ProviderCard: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(DockTheme.surface, in: RoundedRectangle(cornerRadius: 20))
             .overlay { RoundedRectangle(cornerRadius: 20).stroke(DockTheme.border, lineWidth: 1) }
+    }
+
+    @ViewBuilder private var currentWindows: some View {
+        #if os(iOS)
+        if lowQuotaThreshold != nil && !demo && provider.state == .available && provider.source == .codexbar,
+           let observed = provider.observedAt {
+            VStack(alignment: .leading, spacing: 16) { quotaWindows(at: quotaAlertNow) }
+                .task(id: observed) {
+                    quotaAlertNow = Date()
+                    let delay = observed.addingTimeInterval(900.001).timeIntervalSince(quotaAlertNow)
+                    guard observed <= quotaAlertNow, delay > 0 else { return }
+                    // A view-bound, cancellable expiry refresh updates both the
+                    // rendered reading and its accessibility value. No polling
+                    // or collection; a new observation replaces this deadline.
+                    do { try await Task.sleep(for: .seconds(delay)) }
+                    catch { return }
+                    guard !Task.isCancelled else { return }
+                    quotaAlertNow = Date()
+                }
+        } else { quotaWindows(at: Date()) }
+        #else
+        quotaWindows(at: Date())
+        #endif
+    }
+
+    private func quotaWindows(at now: Date) -> some View {
+        #if os(iOS)
+        let low = demo ? [] : QuotaAlerts.lowWindows(in: provider, threshold: lowQuotaThreshold, now: now)
+        #else
+        let low: [QuotaWindow] = []
+        #endif
+        return ForEach(provider.displayWindows) { window in
+            RemainingBar(window: window, lowQuotaThreshold: low.contains(where: { $0.id == window.id }) ? lowQuotaThreshold : nil)
+        }
     }
 }

@@ -207,9 +207,11 @@ struct DockView: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     if model.cloud.session != nil && !model.demo {
-                        CloudReadingsView(model: model.cloud)
+                        CloudReadingsView(model: model.cloud, lowQuotaThreshold: settings.lowQuotaThreshold)
                     } else if let snapshot = model.snapshot {
-                        ForEach(snapshot.providers) { ProviderCard(provider: $0, demo: snapshot.demo) }
+                        ForEach(snapshot.providers) {
+                            ProviderCard(provider: $0, demo: snapshot.demo, lowQuotaThreshold: settings.lowQuotaThreshold)
+                        }
                     } else {
                         ContentUnavailableView(setupText("No readings yet"), systemImage: "chart.bar", description: Text(setupText("Pair a bridge to see remaining allowances.")))
                     }
@@ -242,16 +244,23 @@ struct DockView: View {
                             .disabled(model.busy || model.demo)
                         Menu {
                             Button(setupText("Pair"), systemImage: "link") { showPairing = true }
-                            NavigationLink(setupText("Optional cloud account")) { CloudView(model: model.cloud) }
+                            NavigationLink(setupText("Optional cloud account")) {
+                                CloudView(model: model.cloud, lowQuotaThreshold: settings.lowQuotaThreshold)
+                            }
                         } label: {
                             Label(DockL10n.text("Connections"), systemImage: "link")
                         }
                         Button(setupText("Settings"), systemImage: "gearshape") { showSettings = true }
                     }
                 }
-                .sheet(isPresented: $showPairing) { PairingView(model: model) }
+                .sheet(isPresented: $showPairing, onDismiss: {
+                    #if DEBUG
+                    print("PAIRING_PRESENTATION onDismiss")
+                    #endif
+                }) { PairingView(model: model) }
                 .sheet(isPresented: $showAccounts, onDismiss: { requestedAccountID = nil }) {
-                    CloudAccountsView(model: model.cloud, requestedAccountID: requestedAccountID)
+                    CloudAccountsView(model: model.cloud, requestedAccountID: requestedAccountID,
+                                      lowQuotaThreshold: settings.lowQuotaThreshold)
                         .presentationDetents([.medium, .large])
                 }
                 .sheet(isPresented: $showSettings, onDismiss: {
@@ -266,7 +275,9 @@ struct DockView: View {
                         pendingRoute = route; showSetup = false
                     }, cancel: { showSetup = false })
                 }
-                .sheet(isPresented: $showCloudPreview) { NavigationStack { CloudView(model: model.cloud) } }
+                .sheet(isPresented: $showCloudPreview) {
+                    NavigationStack { CloudView(model: model.cloud, lowQuotaThreshold: settings.lowQuotaThreshold) }
+                }
                 .sheet(isPresented: $showBatchPreview) {
                     #if DEBUG
                     CloudBatchPreview()
@@ -300,6 +311,11 @@ struct DockView: View {
                 }
                 .onChange(of: requestedAccountID) { _, id in
                     if id != nil { showAccounts = true }
+                }
+                .onChange(of: showPairing) { _, presented in
+                    #if DEBUG
+                    print("PAIRING_PRESENTATION state=\(presented)")
+                    #endif
                 }
         }
     }
@@ -337,6 +353,7 @@ struct SettingsView: View {
                 } footer: {
                     Text(setupText("When off, use the refresh button or pull to refresh. Connection failures retain the last observation and its time."))
                 }
+                QuotaAlertControls(settings: settings)
                 Section {
                     DisclosureGroup(setupText("Widgets and Watch")) {
                         Text(setupText("Widgets read only the last saved observations, without connecting to the server or AI accounts. The OS decides when they update."))
@@ -419,7 +436,14 @@ struct PairingView: View {
                     }
                 }
             }.navigationTitle(setupText("Pair bridge"))
-                .toolbar { Button(setupText("Cancel")) { token = ""; dismiss() } }
+                .toolbar {
+                    Button(setupText("Cancel")) {
+                        #if DEBUG
+                        print("PAIRING_PRESENTATION cancelAction")
+                        #endif
+                        token = ""; dismiss()
+                    }
+                }
         }
     }
 }

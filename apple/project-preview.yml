@@ -23,6 +23,7 @@ targets:
       - iOS/QuotaHistory.swift
       - iOS/CloudHistoryDetails.swift
       - Shared/Snapshot.swift
+      - Shared/QuotaAlerts.swift
       - Shared/CacheFiles.swift
       - Shared/AccountSurface.swift
       - Shared/SnapshotStore.swift

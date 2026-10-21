@@ -19,7 +19,7 @@ let package = Package(
             "Shared/Localization.swift", "Shared/ProviderIcon.swift",
             "Shared/QuotaViews.swift", "Shared/SnapshotStore.swift", "Shared/WatchContent.swift",
             "Shared/WatchSync.swift", "Shared/WidgetContent.swift"
-        ], sources: ["Shared/Snapshot.swift", "Shared/CacheFiles.swift", "Shared/Bridge.swift",
+        ], sources: ["Shared/Snapshot.swift", "Shared/QuotaAlerts.swift", "Shared/CacheFiles.swift", "Shared/Bridge.swift",
                      "Shared/AccountSurface.swift", "Shared/WatchTransfer.swift", "iOS/BillingPolicy.swift",
                      "iOS/ConnectionState.swift", "iOS/CloudAccountLabels.swift", "iOS/QuotaHistory.swift"]),
         .testTarget(name: "QuotaDockStorageTests", dependencies: ["QuotaDockStorage"], path: "PortableTests")

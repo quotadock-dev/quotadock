@@ -132,6 +132,12 @@ changes using the existing owner session and MFA. Historical values never refill
 or replace current/widget/Watch readings. Server migration/deployment, real-account
 acceptance and visual approval remain outstanding; see [history setup and privacy](apple/README.md#optional-quota-history-source).
 
+Optional [in-app low-quota markers](apple/README.md#opt-in-in-app-low-quota-markers)
+default off on every plan. Choose 10%, 20% or 30% for independent recent iPhone
+readings; measured zero is not unknown. This local presentation setting excludes
+demo/history and observations older than 15 minutes. It sends no notifications,
+collects no additional usage and does not change widgets, Watch or server consent.
+
 The computer must remain online with its local provider sessions. It polls for
 phone jobs approximately every 20 seconds and checks due automatic collection
 approximately every 20 minutes. The server enforces the tier interval using the

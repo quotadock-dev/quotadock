@@ -182,6 +182,36 @@ capture inspection.
 불확실한 변경 결과는 성공으로 가정하거나 자동 재시도하지 않습니다. 운영 서버 반영,
 실제 로그인·수집 검증과 화면 이미지 검수는 아직 완료되지 않았습니다.
 
+## Opt-in in-app low-quota markers
+
+Open **Settings → In-app low-quota markers**. This phone-local preference defaults
+off on every plan. Enable it to mark independently measured windows at or below
+**10%, 20% or 30%** (initial choice: 20%). The comparison uses the original numeric
+measurement, not the rounded percentage on screen. A measured zero qualifies;
+unknown, unavailable, demo, future-dated and over-15-minute observations do not.
+Historical cards never mark low quota, even when their observation is recent.
+
+Markers describe the retained observation, not live provider status. An open
+current card removes its markers when that observation becomes older than
+15 minutes, without collecting again. A passed reset neither refills the saved
+quota nor suppresses a genuinely measured low value. No usage or credentials are
+stored with this setting; disabling removes the preference. Widgets, Watch, server
+consent and collection schedules are unchanged. There are **no push/local
+notifications, notification permissions or background monitoring** in this feature.
+
+Foundation contract tests cover storage, threshold/freshness boundaries, unknown
+versus zero and independent windows. The separate no-capability UI preview uses
+synthetic readings to exercise opt-in, relaunch, expiry, exclusions and EN/KO
+normal-light/injected-largest-dark layouts. Native execution and real-device
+acceptance must be assessed from the corresponding CI results; image-tool limits
+currently prevent capture inspection, so this is not visual approval.
+
+**설정 → 앱 내 저잔여량 표시**는 기본 꺼짐이며 이 아이폰에만 저장됩니다. 10·20·30%
+기준을 선택해 15분 이내의 현재 원본 측정값을 구간별로 표시합니다. 반올림된 화면 수치로
+판단하지 않으며 미확인·데모·과거 이력·미래 시각·오래된 관측은 제외합니다. 알림 전송이나
+추가 수집은 없고 위젯·Watch는 바꾸지 않습니다. 화면 이미지 검수와 실제 기기 검증은
+별도 출시 조건입니다.
+
 ## Generate, build and test on a Mac
 
 ```sh
