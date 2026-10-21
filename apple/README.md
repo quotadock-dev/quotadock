@@ -146,11 +146,11 @@ security snapshot below does not cover collection health.
 
 Open **Optional cloud → Quota history** to read storage status. History defaults
 off on every plan. Enabling it requires an explicit confirmation for **all your
-accounts**, a recent Apple sign-in and sensitive-change verification when MFA is
-enabled. Disabling it confirms deletion of all your stored history. An uncertain
-response clears the displayed status; explicitly reread it before deciding whether
-to retry. No mutation is automatically retried or silently transferred to a renewed
-session.
+accounts**. When MFA is enabled, sensitive changes also require a recent Apple
+sign-in and Security verification. Disabling confirms deletion of all your stored
+history. An uncertain response clears the displayed status; explicitly reread it
+before deciding whether to retry. No mutation is automatically retried or silently
+transferred to a renewed session.
 
 After sign-in, open **Accounts → an account → Quota history → Read latest history**.
 Read older measurements explicitly, 50 at a time. The server retains only new

@@ -76,7 +76,7 @@ struct CloudHistoryView: View {
                         Text(words("Open an account to read its individual history.", "개별 이력은 계정 화면에서 조회하세요."))
                     }
                     NavigationLink(words("Security / verify sensitive changes", "보안 / 민감한 변경 인증")) { CloudSecurityView(model: model) }
-                    Text(words("With two-factor authentication, verify sensitive changes in Security and return. A recent Apple sign-in is also required. Confirmation never silently renews or transfers that verification.", "2단계 인증을 사용하면 보안에서 민감한 변경을 인증한 후 돌아오세요. 최근 Apple 로그인도 필요합니다. 변경 확인 중 인증을 자동 갱신하거나 다른 세션으로 옮기지 않습니다."))
+                    Text(words("With two-factor authentication enabled, sensitive changes require both Security verification and a recent Apple sign-in. Return here after verification. Confirmation never silently renews or transfers it.", "2단계 인증 사용 시 민감한 변경에는 보안 인증과 최근 Apple 로그인이 모두 필요합니다. 보안에서 인증한 후 돌아오세요. 변경 확인 중 인증을 자동 갱신하거나 다른 세션으로 옮기지 않습니다."))
                         .font(.caption)
                 }
                 if working { ProgressView(words("Waiting for server", "서버 응답 대기 중")) }
