@@ -56,6 +56,10 @@ final class PreviewUITests: XCTestCase {
                 app.terminate(); app.launch()
                 XCTAssertTrue(toggle.waitForExistence(timeout: 8))
                 XCTAssertEqual(toggle.value as? String, "1")
+                // Enter the readings section before finding its rows. At
+                // accessibility5 the controls/footer span multiple viewports.
+                assertHistoryFullyReachable(app.buttons["quota-alert-preview-expire"], in: app,
+                                            name: variant + " restored readings section")
                 for label in [korean ? "세션" : "Session", korean ? "크레딧" : "Credits"] {
                     let element = reading(label)
                     // Form may not instantiate an offscreen large-text row yet.
