@@ -93,11 +93,11 @@ OpenAI's [current Codex plan guide](https://help.openai.com/en/articles/11369540
 
 ## First run · 첫 실행
 
-The feature-branch native source offers three resumable steps: **Welcome → Connection → Preferences**. Choose device language, English or 한국어; explicitly select in-memory **demo**, your **private HTTPS bridge**, **optional cloud**, or **connect later** before continuing. Refresh-on-open defaults on; turn it off for button/pull refresh. Settings lets you change language or review setup; Cancel discards a revisit's connection/refresh draft, not an immediately applied language change. Cloud still requires separate explicit consents and Apple authorization, not merely a setup selection. See [bilingual native instructions](apple/README.md#first-run-setup--첫-실행-설정).
+The native source offers three resumable steps: **Welcome → Connection → Preferences**. Choose device language, English or 한국어; explicitly select in-memory **demo**, your **private HTTPS bridge**, **optional cloud**, or **connect later** before continuing. Refresh-on-open defaults on; turn it off for button/pull refresh. Settings lets you change language or review setup; Cancel discards a revisit's connection/refresh draft, not an immediately applied language change. Cloud still requires separate explicit consents and Apple authorization, not merely a setup selection. See [bilingual native instructions](apple/README.md#first-run-setup--첫-실행-설정).
 
-네이티브 기능 브랜치의 첫 실행은 **시작 → 연결 → 환경설정** 3단계이며 저장된 진행을 이어갑니다. 기기 언어·English·한국어를 선택하고 **메모리 내 데모 / 사설 HTTPS 브리지 / 선택적 클라우드 / 나중에 연결** 중 하나를 직접 선택하세요. 앱을 열 때 새로고침은 기본으로 켜져 있으며 끄면 버튼·당기기로 갱신합니다. 설정에서 언어 변경·설정 다시 보기가 가능하며, 취소는 재설정 중의 연결·새로고침 초안만 버립니다. 클라우드는 별도 명시적 동의와 Apple 인증이 필요합니다.
+네이티브 첫 실행은 **시작 → 연결 → 환경설정** 3단계이며 저장된 진행을 이어갑니다. 기기 언어·English·한국어를 선택하고 **메모리 내 데모 / 사설 HTTPS 브리지 / 선택적 클라우드 / 나중에 연결** 중 하나를 직접 선택하세요. 앱을 열 때 새로고침은 기본으로 켜져 있으며 끄면 버튼·당기기로 갱신합니다. 설정에서 언어 변경·설정 다시 보기가 가능하며, 취소는 재설정 중의 연결·새로고침 초안만 버립니다. 클라우드는 별도 명시적 동의와 Apple 인증이 필요합니다.
 
-Language switching never changes provider quota or performs new provider login. Installed widget language updates are OS-scheduled; Watch delivery is asynchronous. 언어 변경은 제공자 할당량이나 로그인을 바꾸지 않으며, 설치된 위젯 언어 갱신은 OS 일정에, Watch 전달은 비동기 연결에 따릅니다. This is feature-branch source, not `main` or deployed software; [native verification limits](apple/README.md#architecture-and-verification) still apply.
+Language switching never changes provider quota or performs new provider login. Installed widget language updates are OS-scheduled; Watch delivery is asynchronous. 언어 변경은 제공자 할당량이나 로그인을 바꾸지 않으며, 설치된 위젯 언어 갱신은 OS 일정에, Watch 전달은 비동기 연결에 따릅니다. The onboarding and redesign source is merged into `main`, not released or deployed; [native verification limits](apple/README.md#architecture-and-verification) still apply.
 
 The paired web dashboard remembers automatic/manual checks in browser-local storage for future page loads; other already-open tabs keep their current choice. Manual mode does not request usage on reload, a timer or visibility changes; Connect and Refresh remain explicit actions. Demo visits never overwrite this preference. Failed language or automatic-check saves keep the current-page choice and explain that it may reset on reopening. Pairing tokens still use tab-session storage, never browser-local storage. 웹 대시보드의 수동 확인 선택은 재접속에도 유지되며, 저장 실패는 한국어·영어로 안내합니다. 브라우저 저장소를 지우면 기본 설정으로 돌아갑니다.
 
@@ -112,6 +112,12 @@ credentials stay in phone-only Keychain. Simulator contracts and disposable-serv
 renewal/revocation tests passed in [post-noon validation](apple/README.md#architecture-and-verification).
 Real Apple login, device restart/lock and deployed recovery remain release gates;
 this is not a longer-lived bearer or a physical-device login claim.
+
+The separate security/support increment adds optional authenticator MFA,
+one-time recovery codes, plain-text customer conversations and permission-bound
+operator tools. There is no separate password account or automatic administrator
+promotion. See [setup, privacy and verification limits](apple/README.md#security-and-support-source).
+Server source integration is not a deployed-schema or live-login claim.
 
 The computer must remain online with its local provider sessions. It polls for
 phone jobs approximately every 20 seconds and checks due automatic collection
@@ -285,6 +291,12 @@ iPhone-hosted shared views, not installed WidgetKit or paired-Watch acceptance.
 The purchase preview has no product catalogue. Captures were not visually
 inspected because of the image-tool limit. Later security/support native changes
 are excluded from that result; see [native verification](apple/README.md#architecture-and-verification).
+
+The separate security/support snapshot passed a fresh four-target build and
+119 simulator tests (114 hosted units, four original UI flows and one inert
+EN/KO forms test). Its forms had no account or operator authority; this does not
+verify live MFA, recovery, conversations or role changes. Production Swift matches
+that frozen snapshot; later documentation is outside its source aggregate.
 
 See [contributing](CONTRIBUTING.md), [security reporting](SECURITY.md), [changelog](CHANGELOG.md), and [third-party notices](THIRD_PARTY_NOTICES.md). Use the issue forms for reproducible bugs or focused proposals; never paste raw provider diagnostics or credentials. Repository-local skills provide read-only CodexBar inspection, safe QuotaDock verification and [Allowmark design guidance](.agents/skills/designing-allowmark-ui/SKILL.md); they are not installed globally.
 
