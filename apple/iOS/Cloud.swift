@@ -1731,6 +1731,7 @@ struct CloudView: View {
                     NavigationLink(CloudWords.text("Customer support", "고객 지원", locale)) { CloudSupportView(model: model) }
                     NavigationLink(CloudWords.text("Operator support", "운영자 지원", locale)) { CloudAdminView(model: model) }
                 }
+                NavigationLink(CloudWords.text("Quota history", "할당량 이력", locale)) { CloudHistoryView(model: model) }
                 NavigationLink(DockL10n.text("Plans")) { PlansView(model: model) }
             }
         }.navigationTitle(DockL10n.text("Optional cloud"))

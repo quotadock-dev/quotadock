@@ -142,6 +142,46 @@ security snapshot below does not cover collection health.
 요금제 한도 사용은 없습니다. 기록 없음은 시도한 적 없음을 뜻하지 않으며, 운영 서버
 반영 및 실제 수집기 연결 검증은 아직 완료되지 않았습니다.
 
+## Optional quota history source
+
+Open **Optional cloud → Quota history** to read storage status. History defaults
+off on every plan. Enabling it requires an explicit confirmation for **all your
+accounts**. When MFA is enabled, sensitive changes also require a recent Apple
+sign-in and Security verification. Disabling confirms deletion of all your stored
+history. An uncertain response clears the displayed status; explicitly reread it
+before deciding whether to retry. No mutation is automatically retried or silently
+transferred to a renewed session.
+
+After sign-in, open **Accounts → an account → Quota history → Read latest history**.
+Read older measurements explicitly, 50 at a time. The server retains only new
+accepted measurements after consent: at most **168 elapsed hours / 1,000 samples
+per account**. There is no backfill, guaranteed sampling interval, collection
+request or refresh-budget charge from reading history. Pages are not a frozen
+snapshot; concurrent deletion or retention can change the next response.
+
+Each historical card keeps the original source timestamp, plan and independent
+windows. A measured zero differs from unknown; a passed reset does not replenish
+the saved value. History lives only in this screen's memory and clears on leaving,
+backgrounding or changing authority. It never overwrites current quota, offline
+cache, widgets or Watch data. The collector still receives only its scoped grant,
+never the owner's phone session.
+
+The matching [server source](https://github.com/quotadock-dev/quotadock-server/pull/4)
+and additive schema are **not deployed**. An older server or removed account
+produces an unavailable message, not invented history or consent. Foundation
+contract tests exercise decoding and pagination; the separate no-capability UI
+preview uses synthetic data, including zero/unknown/42.75%, EN/KO and injected
+largest-text/dark states. Those fixtures do not establish authenticated collection,
+physical-device acceptance or visual approval. Image-tool limits currently prevent
+capture inspection.
+
+**선택적 클라우드 → 할당량 이력**에서 상태를 직접 조회하고 저장 여부를 확인합니다.
+기본은 꺼짐이며, 활성화 후 새로 수락한 측정값만 계정당 최대 168시간·1,000건 저장합니다.
+해제는 모든 계정의 이력을 삭제합니다. **계정 → 개별 계정 → 할당량 이력**에서 최근/이전
+기록을 조회하며, 조회 자체로 새 수집이나 새로고침 한도 사용이 발생하지 않습니다.
+불확실한 변경 결과는 성공으로 가정하거나 자동 재시도하지 않습니다. 운영 서버 반영,
+실제 로그인·수집 검증과 화면 이미지 검수는 아직 완료되지 않았습니다.
+
 ## Generate, build and test on a Mac
 
 ```sh

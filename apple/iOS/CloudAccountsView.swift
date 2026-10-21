@@ -114,6 +114,11 @@ private struct CloudAccountDetailsView: View {
                     }
                 }
                 Section {
+                    NavigationLink(CloudWords.text("Quota history", "할당량 이력", locale)) {
+                        CloudHistoryView(model: model, account: slot)
+                    }
+                }
+                Section {
                     TextField(DockL10n.text("Eight uppercase hex pairing code"), text: $code)
                         .textInputAutocapitalization(.characters).autocorrectionDisabled().privacySensitive()
                         .disabled(model.busy || model.selectionLocked)

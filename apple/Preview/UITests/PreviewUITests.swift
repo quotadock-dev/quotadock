@@ -3,6 +3,68 @@ import XCTest
 // Only the isolated QD Preview app, never production or its persistence harness.
 // Device runs require a fresh preview installation authorized for UI testing.
 final class PreviewUITests: XCTestCase {
+    func testHistoryPreservesIndependentReadingsAcrossLanguagesAndTextSizes() {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        defer { app.terminate() }
+        for korean in [false, true] {
+            for largest in [false, true] {
+                let variant = "\(korean ? "KO" : "EN")-history-\(largest ? "largest-dark" : "normal-light")"
+                app.launchArguments = ["--history-preview", korean ? "--language-ko-preview" : "--language-en-preview"]
+                    + (largest ? ["--history-largest-preview"] : [])
+                app.launch()
+                let context = app.staticTexts["history-preview-context"]
+                XCTAssertTrue(context.waitForExistence(timeout: 8))
+                let rawContext = XCTAttachment(string: context.label)
+                rawContext.name = variant + "-context"; rawContext.lifetime = .keepAlways; add(rawContext)
+                XCTAssertTrue(context.label.contains(korean ? "locale=ko" : "locale=en"))
+                XCTAssertTrue(context.label.contains(largest ? "type=accessibility5" : "type=large"))
+                XCTAssertTrue(context.label.contains(largest ? "scheme=dark" : "scheme=light"))
+                XCTAssertEqual(app.staticTexts["history-preview-notice"].label,
+                               korean ? "UI 프리뷰 · 샘플 데이터 전용" : "UI PREVIEW · sample data only")
+                capture(app, variant + "-top")
+                let expected = korean
+                    ? [("세션", "0% 남음"), ("주간", "잔여량 알 수 없음"), ("크레딧", "42.75% 남음")]
+                    : [("Session", "0% remaining"), ("Weekly", "Remaining unknown"), ("Credits", "42.75% remaining")]
+                for (label, value) in expected {
+                    let reading = app.descendants(matching: .any).matching(
+                        NSPredicate(format: "label == %@ AND value BEGINSWITH %@", label, value)).firstMatch
+                    assertHistoryFullyReachable(reading, in: app, name: "\(variant): \(label): \(value)")
+                    capture(app, variant + "-" + label)
+                }
+                let timestamp = app.staticTexts["2026-10-21T05:00:00.123999Z"]
+                assertHistoryFullyReachable(timestamp, in: app, name: variant + " original timestamp")
+                XCTAssertFalse(app.buttons["Connect with Apple"].exists)
+                XCTAssertFalse(app.buttons["Apple로 연결"].exists)
+                capture(app, variant + "-readings")
+                let hierarchy = XCTAttachment(string: app.debugDescription)
+                hierarchy.name = variant + "-AX"; hierarchy.lifetime = .keepAlways; add(hierarchy)
+                app.terminate()
+            }
+        }
+    }
+
+    private func assertHistoryFullyReachable(_ element: XCUIElement, in app: XCUIApplication, name: String) {
+        // Hittable alone also accepts partially offscreen text. Check the whole
+        // element below navigation and leave room above the home indicator.
+        func visibleArea() -> CGRect {
+            let top = app.navigationBars.firstMatch.frame.maxY + 8
+            return CGRect(x: app.frame.minX, y: top, width: app.frame.width,
+                          height: app.frame.maxY - 40 - top)
+        }
+        for _ in 0..<8 {
+            if element.exists && element.isHittable && visibleArea().contains(element.frame) { break }
+            let down = element.exists && element.frame.minY < visibleArea().minY
+            let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: down ? 0.4 : 0.7))
+            let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: down ? 0.7 : 0.4))
+            start.press(forDuration: 0.05, thenDragTo: end)
+        }
+        XCTAssertTrue(element.isHittable, name)
+        XCTAssertGreaterThan(element.frame.height, 0, name)
+        XCTAssertTrue(visibleArea().contains(element.frame), "\(name): \(element.frame) outside \(visibleArea())")
+        print("HISTORY REACH \(name): element=\(element.frame), viewport=\(visibleArea())")
+    }
+
     func testOfflineSetupStatesLanguageAndRelaunch() {
         continueAfterFailure = false
         let app = XCUIApplication()

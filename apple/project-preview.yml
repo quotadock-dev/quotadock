@@ -14,11 +14,14 @@ targets:
   QuotaDockPreview:
     type: application
     platform: iOS
-    # Deliberate allowlist: no bridge, cloud, authority, purchases, Watch or widgets.
+    # Allowlist: history data/presentation only, no cloud client or authority.
+    # No bridge, purchases, Watch or widgets.
     sources:
       - Preview/QuotaDockPreviewApp.swift
       - iOS/FirstRun.swift
       - iOS/PlanViews.swift
+      - iOS/QuotaHistory.swift
+      - iOS/CloudHistoryDetails.swift
       - Shared/Snapshot.swift
       - Shared/CacheFiles.swift
       - Shared/AccountSurface.swift

@@ -2,6 +2,28 @@ import XCTest
 @testable import QuotaDock
 
 final class CloudSecuritySupportTests: XCTestCase {
+    @MainActor
+    func testHistoryRejectsDisconnectedReadsAndConsentChanges() async {
+        let model = CloudModel()
+        model.session = nil
+        let slot = CloudAccount(id: UUID(), provider: .codex)
+        model.slots = [slot]
+        do {
+            _ = try await model.readHistorySettings()
+            XCTFail("Disconnected history must not be read")
+        } catch { XCTAssertTrue(error is CancellationError) }
+        for enabled in [true, false] {
+            do {
+                _ = try await model.changeHistory(enabled: enabled, exactToken: "synthetic-stale-session")
+                XCTFail("A disconnected confirmation must not change consent")
+            } catch { XCTAssertTrue(error is CancellationError) }
+        }
+        do {
+            _ = try await model.readHistoryPage(account: slot)
+            XCTFail("A retained slot does not authorize history")
+        } catch { XCTAssertTrue(error is CancellationError) }
+    }
+
     func testLoginChallengeRejectsExpiredAndMalformedTokens() throws {
         let base = URL(string: "https://example.com")!
         func response(_ token: String, _ expiry: String) throws -> Data {

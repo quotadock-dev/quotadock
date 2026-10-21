@@ -125,6 +125,13 @@ indicator; an accepted report may contain no fresh quota. Existing grants withou
 poll tracking remain unknown. This requires the matching Python server migration,
 which has not been deployed; see [collection health](apple/README.md#collection-health-source).
 
+Optional history is a separate, default-off consent: store only future successful
+measurements for up to 168 hours and 1,000 samples per account on every plan. The
+iPhone source reads per-account pages explicitly and confirms global enable/delete
+changes using the existing owner session and MFA. Historical values never refill
+or replace current/widget/Watch readings. Server migration/deployment, real-account
+acceptance and visual approval remain outstanding; see [history setup and privacy](apple/README.md#optional-quota-history-source).
+
 The computer must remain online with its local provider sessions. It polls for
 phone jobs approximately every 20 seconds and checks due automatic collection
 approximately every 20 minutes. The server enforces the tier interval using the
