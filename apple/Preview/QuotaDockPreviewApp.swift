@@ -46,6 +46,7 @@ private struct PreviewQuotaAlerts: View {
                     Button("Expire synthetic reading in 15 seconds") {
                         observedAt = Date().addingTimeInterval(-885)
                     }.accessibilityIdentifier("quota-alert-preview-expire")
+                        .accessibilityValue(String(observedAt.timeIntervalSince1970))
                     ProviderCard(provider: reading(.codex, windows: [
                         QuotaWindow(id: "primary", label: "Session", remainingPercent: 0, resetsAt: nil),
                         QuotaWindow(id: "secondary", label: "Weekly", remainingPercent: nil, resetsAt: nil),

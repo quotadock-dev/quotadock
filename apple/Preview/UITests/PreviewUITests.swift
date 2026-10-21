@@ -3,7 +3,7 @@ import XCTest
 // Only the isolated QD Preview app, never production or its persistence harness.
 // Device runs require a fresh preview installation authorized for UI testing.
 final class PreviewUITests: XCTestCase {
-    func testLowQuotaMarkersAreOptInIndependentAndExpireWithoutCollection() {
+    func testLowQuotaMarkersAreOptInIndependentAndExpireWithoutCollection() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
         defer { app.terminate() }
@@ -73,14 +73,26 @@ final class PreviewUITests: XCTestCase {
                     scrollAlertsToTop(app)
                     let expire = app.buttons["quota-alert-preview-expire"]
                     assertHistoryFullyReachable(expire, in: app, name: variant + " expiry control")
+                    let previousSource = expire.value as? String
                     expire.tap()
+                    captureAlerts(app, variant + "-expiry-source", reading: expire)
+                    XCTAssertNotEqual(expire.value as? String, previousSource)
+                    let epoch = try XCTUnwrap(Double(expire.value as? String ?? ""))
+                    let age = Date().timeIntervalSince1970 - epoch
+                    XCTAssertGreaterThanOrEqual(age, 885)
+                    XCTAssertLessThan(age, 900)
                     assertHistoryFullyReachable(session, in: app, name: variant + " before expiry")
+                    captureAlerts(app, variant + "-before-expiry", reading: session)
                     XCTAssertTrue((session.value as? String ?? "").contains(marker30))
-                    let expired = XCTNSPredicateExpectation(predicate: NSPredicate(
-                        format: "NOT (value CONTAINS %@)", marker30), object: session)
-                    XCTAssertEqual(XCTWaiter.wait(for: [expired], timeout: 25), .completed)
-                    XCTAssertTrue((session.value as? String ?? "").hasPrefix("0% remaining"))
+                    let expired = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                        guard session.exists, let value = session.value as? String else { return false }
+                        return value.hasPrefix("0% remaining") && !value.contains(marker30)
+                    }, object: nil)
+                    let result = XCTWaiter.wait(for: [expired], timeout: 25)
                     captureAlerts(app, variant + "-expired", reading: session)
+                    XCTAssertEqual(result, .completed)
+                    XCTAssertTrue((session.value as? String ?? "").hasPrefix("0% remaining"))
+                    XCTAssertFalse((session.value as? String ?? "").contains(marker30))
                 }
                 scrollAlertsToTop(app)
                 assertHistoryFullyReachable(toggle, in: app, name: variant + " disable control")
