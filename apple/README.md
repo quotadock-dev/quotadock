@@ -74,6 +74,44 @@ Watch/widgets and logs. Logout/account deletion clears the current scope; removi
 a slot clears its label. Token renewal retains labels; a new login family does
 not inherit them. Legacy sessions use the connection generation instead.
 
+## Security and support source
+
+This increment requires the matching server security/support schemas and runtime.
+Those changes are source-only; do not point this client at an older pilot and
+assume the new endpoints are available. Real Apple login, MFA/recovery and
+operator acceptance remain release gates.
+
+- **Security:** after Apple sign-in, open Optional cloud → Security. Read status,
+  enroll an authenticator and confirm its new code. Retain the ten recovery codes
+  yourself; they are shown once with an explicit acknowledgment, never copied
+  automatically. Confirmation or disabling revokes sessions, collectors and pairs;
+  sign in with Apple again. Sensitive changes require an explicit, short-lived
+  verification bound to the exact access token, not an automatically renewed one.
+- **Recovery:** an MFA login can use a one-time recovery code to obtain a restricted
+  authenticator-replacement grant. It does not issue an ordinary session. Confirm
+  the new authenticator and retain new recovery codes before signing in again.
+  Apple Account recovery is separate; support cannot impersonate a user or reset
+  their factor. Losing all factors and recovery codes still needs an approved
+  recovery policy before launch.
+- **Customer support:** create a plain-text ticket, read replies, resolve/reopen
+  it and explicitly retry an unchanged uncertain message using its retained request
+  key. Do not send credentials or private diagnostics; nothing is attached
+  automatically. The server stores the subject, category and conversation for
+  authorized staff, plus assignments and staff-only internal notes. Customers
+  cannot read internal notes.
+- **Operator support:** a provisioned role and explicit TOTP verification are both
+  required. MFA alone never grants a role. Agents see assigned tickets; managers
+  and admins can manage the queue and read snapshot counts, not revenue or active
+  user measurements. Only admins can change another operator's role/status using
+  a loaded server version and destructive confirmation. Conflicts or uncertain
+  mutations require a new lookup; there is no automatic retry or promotion.
+
+설정의 선택적 클라우드에서 **보안 / 고객 지원 / 운영자 지원**을 엽니다.
+인증 앱 비밀값과 복구 코드는 기기 메모리에만 표시되며 자동 복사하지 않습니다.
+서버는 암호화된 인증 앱 비밀값, 복구 코드 해시와 보안 기록을 저장합니다.
+문의 제목·분류·메시지와 담당자·내부 메모도 저장되므로 비밀 정보를 보내지 마세요.
+실제 Apple 로그인·복구·운영자 업무 검증과 운영 서버 반영은 아직 완료되지 않았습니다.
+
 ## Generate, build and test on a Mac
 
 ```sh
@@ -294,6 +332,18 @@ Graphite/mint bars mean **remaining**, clamped to 0–100, never summed. Null is
 “Explore demo” is explicitly labeled and stays in memory: it never overwrites live cache or transfers fabricated readings. Legacy Xcode/WidgetKit samples use `Snapshot.preview`, with `demo: true` and `source: demo`. Selected-account widget placeholders instead have no account snapshot and remain unavailable.
 
 ## Architecture and verification
+
+The separate 2026-10-21 security/support candidate (71-file aggregate
+`2faf4b62cf428f281def4bc74eaa3e6307f99b9598ebed8eaf4cd888d893650e`)
+passed a fresh four-target build and **119 simulator tests**: 110 original hosted
+units, four new security/support contract tests, four original production UI
+flows and one disposable EN/KO forms test. The forms host had no session or
+operator authority; it checked logged-out/disabled controls, not live MFA,
+recovery, tickets, role changes or API acceptance. Original tests were unchanged.
+The earlier security candidate failed its Apple build before any test ran;
+its diagnostics remain preserved, not counted as a pass. Image-tool quota still
+prevents visual inspection. Subsequent documentation edits are not part of the
+frozen 71-file aggregate; production Swift sources match that candidate.
 
 The frozen 2026-10-21 Allowmark redesign passed a fresh iPhone, iOS-widget,
 Watch and Watch-widget build, 110 hosted units, four original production UI
