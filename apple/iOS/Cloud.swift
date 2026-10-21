@@ -1725,6 +1725,7 @@ struct CloudView: View {
             }
             Section {
                 if model.session != nil {
+                    NavigationLink(CloudWords.text("Collection health", "수집 상태", locale)) { CloudCollectionHealthView(model: model) }
                     NavigationLink(CloudWords.text("Security", "보안", locale)) { CloudSecurityView(model: model) }
                     NavigationLink(CloudWords.text("Customer support", "고객 지원", locale)) { CloudSupportView(model: model) }
                     NavigationLink(CloudWords.text("Operator support", "운영자 지원", locale)) { CloudAdminView(model: model) }

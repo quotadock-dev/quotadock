@@ -112,6 +112,36 @@ operator acceptance remain release gates.
 문의 제목·분류·메시지와 담당자·내부 메모도 저장되므로 비밀 정보를 보내지 마세요.
 실제 Apple 로그인·복구·운영자 업무 검증과 운영 서버 반영은 아직 완료되지 않았습니다.
 
+## Collection health source
+
+After cloud sign-in, open **Optional cloud → Collection health** and explicitly
+read metadata. This does not trigger provider collection, refill an allowance or
+spend refresh budget. A failed/incomplete read retains the previous metadata with
+its original phone read time; sign-out/background clears the screen's memory.
+
+The screen keeps three different events separate:
+
+- **Last successful source observation:** the retained measured quota timestamp,
+  not when the phone read it.
+- **Last report received:** the server's accepted completion time for a retained
+  job created within 90 days. The report may have contained no fresh quota.
+  Missing records do not prove that collection was never attempted. This is not
+  quota history.
+- **Last accepted queue poll:** a successful collector queue check, including an
+  empty queue. Permission expiry and recent contact do not prove current online
+  status or successful provider collection. Existing grants have unknown contact
+  time until tracking receives a valid poll; there is no inferred backfill.
+
+The active Python server's additive migration/runtime is required and remains
+undeployed. Older servers show an unsupported-endpoint message rather than
+manufactured data. New source needs its own native verification; the earlier
+security snapshot below does not cover collection health.
+
+**선택적 클라우드 → 수집 상태**에서 직접 조회합니다. 성공 관측·작업 결과 수신·수집기
+폴링 시각을 구분하며, 권한 만료일로 온라인 여부를 판단하지 않습니다. 새 제공자 수집이나
+요금제 한도 사용은 없습니다. 기록 없음은 시도한 적 없음을 뜻하지 않으며, 운영 서버
+반영 및 실제 수집기 연결 검증은 아직 완료되지 않았습니다.
+
 ## Generate, build and test on a Mac
 
 ```sh
@@ -342,8 +372,8 @@ operator authority; it checked logged-out/disabled controls, not live MFA,
 recovery, tickets, role changes or API acceptance. Original tests were unchanged.
 The earlier security candidate failed its Apple build before any test ran;
 its diagnostics remain preserved, not counted as a pass. Image-tool quota still
-prevents visual inspection. Subsequent documentation edits are not part of the
-frozen 71-file aggregate; production Swift sources match that candidate.
+prevents visual inspection. Subsequent documentation and collection-health source
+are not part of that frozen 71-file aggregate or its verification.
 
 The frozen 2026-10-21 Allowmark redesign passed a fresh iPhone, iOS-widget,
 Watch and Watch-widget build, 110 hosted units, four original production UI
