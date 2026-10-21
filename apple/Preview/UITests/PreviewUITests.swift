@@ -29,18 +29,11 @@ final class PreviewUITests: XCTestCase {
                 for (label, value) in expected {
                     let reading = app.descendants(matching: .any).matching(
                         NSPredicate(format: "label == %@ AND value BEGINSWITH %@", label, value)).firstMatch
-                    for _ in 0..<8 {
-                        if reading.exists && reading.isHittable { break }
-                        app.swipeUp()
-                    }
-                    XCTAssertTrue(reading.isHittable, "\(variant): expected independent \(label): \(value)")
+                    assertHistoryFullyReachable(reading, in: app, name: "\(variant): \(label): \(value)")
+                    capture(app, variant + "-" + label)
                 }
                 let timestamp = app.staticTexts["2026-10-21T05:00:00.123999Z"]
-                for _ in 0..<8 {
-                    if timestamp.exists && timestamp.isHittable { break }
-                    app.swipeUp()
-                }
-                XCTAssertTrue(timestamp.isHittable, "Original source timestamp remains reachable")
+                assertHistoryFullyReachable(timestamp, in: app, name: variant + " original timestamp")
                 XCTAssertFalse(app.buttons["Connect with Apple"].exists)
                 XCTAssertFalse(app.buttons["Apple로 연결"].exists)
                 capture(app, variant + "-readings")
@@ -49,6 +42,27 @@ final class PreviewUITests: XCTestCase {
                 app.terminate()
             }
         }
+    }
+
+    private func assertHistoryFullyReachable(_ element: XCUIElement, in app: XCUIApplication, name: String) {
+        // Hittable alone also accepts partially offscreen text. Check the whole
+        // element below navigation and leave room above the home indicator.
+        func visibleArea() -> CGRect {
+            let top = app.navigationBars.firstMatch.frame.maxY + 8
+            return CGRect(x: app.frame.minX, y: top, width: app.frame.width,
+                          height: app.frame.maxY - 40 - top)
+        }
+        for _ in 0..<8 {
+            if element.exists && element.isHittable && visibleArea().contains(element.frame) { break }
+            let down = element.exists && element.frame.minY < visibleArea().minY
+            let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: down ? 0.4 : 0.7))
+            let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: down ? 0.7 : 0.4))
+            start.press(forDuration: 0.05, thenDragTo: end)
+        }
+        XCTAssertTrue(element.isHittable, name)
+        XCTAssertGreaterThan(element.frame.height, 0, name)
+        XCTAssertTrue(visibleArea().contains(element.frame), "\(name): \(element.frame) outside \(visibleArea())")
+        print("HISTORY REACH \(name): element=\(element.frame), viewport=\(visibleArea())")
     }
 
     func testOfflineSetupStatesLanguageAndRelaunch() {
