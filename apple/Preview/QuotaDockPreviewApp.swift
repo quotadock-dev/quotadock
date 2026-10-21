@@ -10,7 +10,9 @@ struct QuotaDockPreviewApp: App {
     var body: some Scene {
         WindowGroup {
             Group {
-                if needsSetup {
+                if ProcessInfo.processInfo.arguments.contains("--history-preview") {
+                    PreviewHistory()
+                } else if needsSetup {
                     FirstRunView(settings: settings) { _ in needsSetup = false }
                 } else {
                     PreviewDashboard(settings: settings)
@@ -19,6 +21,37 @@ struct QuotaDockPreviewApp: App {
             .environment(\.locale, settings.locale)
             .tint(DockTheme.mint)
         }
+    }
+}
+
+private struct PreviewHistory: View {
+    private let largest = ProcessInfo.processInfo.arguments.contains("--history-largest-preview")
+    var body: some View {
+        NavigationStack {
+            Form {
+                PreviewNotice(identifier: "history-preview-notice")
+                HistoryPreviewContext()
+                if let page = try? CloudHistoryPage.decode(Data("""
+                {"accountId":"00000001-0000-4000-8000-000000000000","provider":"codex","enabled":true,"retentionDays":7,"maximumSamplesPerAccount":1000,"observations":[{"plan":"ChatGPT Plus","state":"available","source":"codexbar","observedAt":"2026-10-21T05:00:00.123999Z","windows":[{"id":"primary","label":"Session","remainingPercent":0,"resetsAt":"2026-10-21T04:00:00Z"},{"id":"secondary","label":"Weekly","remainingPercent":null,"resetsAt":null},{"id":"tertiary","label":"Credits","remainingPercent":42.75,"resetsAt":null}]}],"nextCursor":null}
+                """.utf8), accountID: UUID(uuidString: "00000001-0000-4000-8000-000000000000")!, provider: .codex) {
+                    CloudHistoryDetails(observations: page.observations)
+                } else { Text("Invalid synthetic history fixture") }
+            }
+            .navigationTitle("History UI preview")
+        }
+        .dynamicTypeSize(largest ? .accessibility5 : .large)
+        .preferredColorScheme(largest ? .dark : .light)
+    }
+}
+
+private struct HistoryPreviewContext: View {
+    @Environment(\.locale) private var locale
+    @Environment(\.dynamicTypeSize) private var type
+    @Environment(\.colorScheme) private var scheme
+    var body: some View {
+        let typeName = type == .accessibility5 ? "accessibility5" : type == .large ? "large" : "unexpected: \(String(describing: type))"
+        Text("locale=\(locale.identifier); type=\(typeName); scheme=\(scheme == .dark ? "dark" : "light")")
+            .font(.caption).accessibilityIdentifier("history-preview-context")
     }
 }
 
