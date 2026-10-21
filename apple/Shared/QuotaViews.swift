@@ -118,7 +118,7 @@ struct RemainingBar: View {
                 QuotaTrack(remaining: remaining)
             }
             if let lowQuotaThreshold {
-                Label(DockL10n.format("Observed at or below %d%%", lowQuotaThreshold), systemImage: "exclamationmark.triangle")
+                Label(DockL10n.format("Observed at or below %@", "\(lowQuotaThreshold)%"), systemImage: "exclamationmark.triangle")
                     .font(.caption).foregroundStyle(.primary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -136,7 +136,7 @@ struct RemainingBar: View {
 
     private var accessibilitySummary: String {
         var remaining = remainingText.replacingOccurrences(of: "<0.01%", with: DockL10n.text("Less than 0.01 percent"))
-        if let lowQuotaThreshold { remaining += ". " + DockL10n.format("Observed at or below %d%%", lowQuotaThreshold) }
+        if let lowQuotaThreshold { remaining += ". " + DockL10n.format("Observed at or below %@", "\(lowQuotaThreshold)%") }
         guard let reset = window.resetsAt else { return remaining }
         return DockL10n.format("%@. Reset: %@", remaining, DockL10n.date(reset))
     }

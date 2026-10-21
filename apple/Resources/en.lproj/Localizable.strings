@@ -280,6 +280,6 @@
 "Reset passed · awaiting observation" = "Reset passed · awaiting observation";
 "In-app low-quota markers" = "In-app low-quota markers";
 "Low-quota threshold" = "Low-quota threshold";
-"Observed at or below %d%%" = "Observed at or below %d%%";
+"Observed at or below %@" = "Observed at or below %@";
 "Could not save this preference. The previous choice is retained." = "Could not save this preference. The previous choice is retained.";
 "Off by default. Marks independent current readings observed within 15 minutes, not unknown, demo or history. No notifications, background monitoring or new collection. Applies only on this iPhone; widgets and Watch are unchanged." = "Off by default. Marks independent current readings observed within 15 minutes, not unknown, demo or history. No notifications, background monitoring or new collection. Applies only on this iPhone; widgets and Watch are unchanged.";

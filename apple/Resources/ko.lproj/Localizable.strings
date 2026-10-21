@@ -280,6 +280,6 @@
 "Reset passed · awaiting observation" = "초기화 시각 지남 · 새 관측 대기";
 "In-app low-quota markers" = "앱 내 저잔여량 표시";
 "Low-quota threshold" = "저잔여량 기준";
-"Observed at or below %d%%" = "%d%% 이하로 관측됨";
+"Observed at or below %@" = "%@ 이하로 관측됨";
 "Could not save this preference. The previous choice is retained." = "설정을 저장하지 못했습니다. 이전 선택을 유지합니다.";
 "Off by default. Marks independent current readings observed within 15 minutes, not unknown, demo or history. No notifications, background monitoring or new collection. Applies only on this iPhone; widgets and Watch are unchanged." = "기본은 꺼짐입니다. 15분 이내의 현재 측정값을 구간별로 표시하며, 미확인·데모·과거 이력은 제외합니다. 알림 전송·백그라운드 감시·새 수집은 없습니다. 이 아이폰에만 적용하며 위젯·Watch는 바꾸지 않습니다.";
