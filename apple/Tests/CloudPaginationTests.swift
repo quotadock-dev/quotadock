@@ -40,6 +40,33 @@ final class CloudPaginationTests: XCTestCase {
             "nextCursor": next.map { $0.uuidString as Any } ?? NSNull()
         ])
     }
+
+    @MainActor
+    func testPacedReadPreservesAuthorityValidatorActor() async throws {
+        enum Admission: Error { case networkProhibited, staleAuthority }
+        // The persistent admission check throws before URLSession.bytes(for:).
+        // This exercises the real read path without starting any HTTP request.
+        let client = try CloudClient(baseURL: "https://example.invalid", authorityCheck: {
+            throw Admission.networkProhibited
+        })
+        let budget = CloudReadBudget()
+        var allowed = true
+        let validate: @MainActor () throws -> Void = {
+            MainActor.preconditionIsolated()
+            guard allowed else { throw Admission.staleAuthority }
+        }
+        do {
+            _ = try await budget.fetch("v2/collection-health/page", client: client, beforeRequest: validate)
+            XCTFail("Synthetic admission check allowed network access")
+        } catch Admission.networkProhibited { }
+
+        allowed = false
+        do {
+            _ = try await budget.fetch("v2/collection-health/page", client: client, beforeRequest: validate)
+            XCTFail("Revoked authority reached the transport")
+        } catch Admission.staleAuthority { }
+    }
+
     func testCursorTraversalPreservesDistinctSameProviderSlotsAndBatch() async throws {
         let ids = (1...275).map(uuid)
         let slots = try await CloudPagination.accounts { path in

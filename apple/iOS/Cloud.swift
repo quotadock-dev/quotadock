@@ -671,6 +671,7 @@ enum CloudRefreshIntentStore {
     static func remove() { SecItemDelete(query as CFDictionary) }
 }
 
+@MainActor
 final class CloudReadBudget {
     let deadline: TimeInterval
     private var bytes = 0
@@ -684,7 +685,7 @@ final class CloudReadBudget {
               ProcessInfo.processInfo.systemUptime < deadline else { throw SnapshotError.invalid }
     }
     func fetch(_ path: String, client: CloudClient,
-               beforeRequest: () throws -> Void = {}) async throws -> Data {
+               beforeRequest: @MainActor () throws -> Void = {}) async throws -> Data {
         try validate()
         if let lastStart {
             let wait = lastStart + 0.5 - ProcessInfo.processInfo.systemUptime
