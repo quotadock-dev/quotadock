@@ -144,6 +144,9 @@ struct RemainingBar: View {
 
 struct ProviderCard: View {
     @Environment(\.locale) private var locale
+    #if os(iOS)
+    @State private var quotaAlertNow = Date()
+    #endif
     let provider: Provider
     let demo: Bool
     var accountLabel: String? = nil
@@ -209,17 +212,21 @@ struct ProviderCard: View {
 
     @ViewBuilder private var currentWindows: some View {
         #if os(iOS)
-        if lowQuotaThreshold != nil && !demo && provider.source == .codexbar,
+        if lowQuotaThreshold != nil && !demo && provider.state == .available && provider.source == .codexbar,
            let observed = provider.observedAt {
-            let now = Date()
-            let expiry = observed.addingTimeInterval(900.001)
-            // One expiry refresh, not polling or collection. An open card must
-            // replace its schedule when the source observation changes. Context
-            // dates are schedule entries, not necessarily the actual read time.
-            TimelineView(.explicit(expiry > now ? [now, expiry] : [now])) { _ in
-                VStack(alignment: .leading, spacing: 16) { quotaWindows(at: Date()) }
-            }
-            .id(observed)
+            VStack(alignment: .leading, spacing: 16) { quotaWindows(at: quotaAlertNow) }
+                .task(id: observed) {
+                    quotaAlertNow = Date()
+                    let delay = observed.addingTimeInterval(900.001).timeIntervalSince(quotaAlertNow)
+                    guard observed <= quotaAlertNow, delay > 0 else { return }
+                    // A view-bound, cancellable expiry refresh updates both the
+                    // rendered reading and its accessibility value. No polling
+                    // or collection; a new observation replaces this deadline.
+                    do { try await Task.sleep(for: .seconds(delay)) }
+                    catch { return }
+                    guard !Task.isCancelled else { return }
+                    quotaAlertNow = Date()
+                }
         } else { quotaWindows(at: Date()) }
         #else
         quotaWindows(at: Date())
