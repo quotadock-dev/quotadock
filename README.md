@@ -195,15 +195,15 @@ Node.js 22를 설치하고 저장소 루트에서 실행하세요. 수집기 자
 웹 대시보드는 React·strict TypeScript·Vite로 빌드합니다.
 
 ```sh
-git clone --branch feat/quota-dock https://github.com/quotadock-dev/quotadock.git
+git clone https://github.com/quotadock-dev/quotadock.git
 cd quotadock
 npm ci --ignore-scripts
 node bridge/cli.mjs init
-node bridge/cli.mjs status --demo
+node bridge/cli.mjs status --demo --text --language=ko
 npm run demo
 ```
 
-현재 소스는 [PR #2](https://github.com/quotadock-dev/quotadock/pull/2)의 `feat/quota-dock` 브랜치에 있습니다. `main` 병합 전에는 위 브랜치를 지정해야 합니다.
+현재 통합 소스는 `main`에 있습니다. 저장소 소스의 병합은 앱 배포·서버 업데이트·App Store 출시를 뜻하지 않습니다.
 
 `init`는 로컬 페어링 토큰을 생성합니다. **토큰을 터미널 로그, 이슈, 스크린샷에 공유하지 마세요.** 웹 화면은 같은 컴퓨터의 `http://127.0.0.1:8787`에서 확인합니다. Demo 표시는 실제 계정 사용량이 아닙니다.
 
@@ -215,8 +215,24 @@ npm run demo
 
 ```sh
 node bridge/cli.mjs status
+node bridge/cli.mjs status --text --language=ko
 npm start
 ```
+
+`status` keeps its default JSON contract. Add `--text` for independent long ASCII
+remaining gauges, plan, original observation time and reset time; use
+`--language=ko` for Korean or `--language=en` (default) for English. This is a
+one-shot local CodexBar check, not a cloud job, background service or online-status
+claim. Text output uses explicit UTC dates; observations older than 15 minutes
+are stale. Unknown windows use question marks, measured zero has an empty bar,
+and an elapsed reset never changes the measured percentage. `--demo` needs no
+provider access and always labels sample data. No credentials or raw diagnostics
+are included in either output format.
+
+`status --text`는 독립 구간별 긴 잔여 게이지·요금제·원본 관측·리셋 시각을
+표시합니다. UTC 시각을 쓰며 15분을 넘긴 관측은 오래된 값으로 표시합니다.
+알 수 없음은 물음표, 실제 0%는 빈 게이지입니다. 클라우드 작업이나 상시
+온라인 상태가 아니라 한 번의 로컬 확인이며, 리셋 시각만으로 값을 채우지 않습니다.
 
 iPhone에서 `127.0.0.1`은 Mac이 아닌 iPhone 자신입니다. 실제 기기는 **사설 VPN과 HTTPS 리버스 프록시** 또는 아래 네이티브 TLS 구성을 사용하고 신뢰할 수 있는 인증서를 설정하세요. 인증 없이 공개 인터넷에 노출하면 안 됩니다.
 
