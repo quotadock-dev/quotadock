@@ -119,6 +119,12 @@ operator tools. There is no separate password account or automatic administrator
 promotion. See [setup, privacy and verification limits](apple/README.md#security-and-support-source).
 Server source integration is not a deployed-schema or live-login claim.
 
+The collection-health source separately displays the successful source observation,
+last accepted job report and collector queue poll. A valid grant is not an online
+indicator; an accepted report may contain no fresh quota. Existing grants without
+poll tracking remain unknown. This requires the matching Python server migration,
+which has not been deployed; see [collection health](apple/README.md#collection-health-source).
+
 The computer must remain online with its local provider sessions. It polls for
 phone jobs approximately every 20 seconds and checks due automatic collection
 approximately every 20 minutes. The server enforces the tier interval using the
@@ -295,8 +301,8 @@ are excluded from that result; see [native verification](apple/README.md#archite
 The separate security/support snapshot passed a fresh four-target build and
 119 simulator tests (114 hosted units, four original UI flows and one inert
 EN/KO forms test). Its forms had no account or operator authority; this does not
-verify live MFA, recovery, conversations or role changes. Production Swift matches
-that frozen snapshot; later documentation is outside its source aggregate.
+verify live MFA, recovery, conversations or role changes. Later collection-health
+source and documentation are outside that frozen snapshot's verification.
 
 See [contributing](CONTRIBUTING.md), [security reporting](SECURITY.md), [changelog](CHANGELOG.md), and [third-party notices](THIRD_PARTY_NOTICES.md). Use the issue forms for reproducible bugs or focused proposals; never paste raw provider diagnostics or credentials. Repository-local skills provide read-only CodexBar inspection, safe QuotaDock verification and [Allowmark design guidance](.agents/skills/designing-allowmark-ui/SKILL.md); they are not installed globally.
 

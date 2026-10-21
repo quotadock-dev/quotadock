@@ -510,4 +510,53 @@ final class CloudPaginationTests: XCTestCase {
         XCTAssertEqual(model.snapshot?.accounts[0].observedAt, original.accounts[0].observedAt)
         XCTAssertEqual(model.refreshSelection.ids, [uuid(1)])
     }
+
+    func testCollectionHealthKeepsObservationReportAndQueuePollDistinct() async throws {
+        let observed = "2026-10-21T05:00:00.123Z"
+        let reported = "2026-10-21T06:07:00.456Z"
+        let polled = "2026-10-21T06:08:00.789Z"
+        let result = try await CloudCollectionHealth.read { path in
+            if path == "v2/collectors" {
+                return try JSONSerialization.data(withJSONObject: ["collectors": [
+                    ["id": self.uuid(99).uuidString, "accountIds": [self.uuid(7).uuidString], "expiresAt": "2099-01-01T00:00:00Z"],
+                    ["id": self.uuid(101).uuidString, "accountIds": [self.uuid(1).uuidString], "expiresAt": "2099-01-01T00:00:00Z", "lastPolledAt": polled]
+                ]])
+            }
+            if path.contains("after=") {
+                return try JSONSerialization.data(withJSONObject: ["accounts": [
+                    ["accountId": self.uuid(7).uuidString, "provider": "codex", "observedAt": NSNull(), "lastReportAt": NSNull(), "lastError": NSNull()]
+                ], "nextCursor": NSNull(), "reportRetentionDays": 90])
+            }
+            return try JSONSerialization.data(withJSONObject: ["accounts": [
+                ["accountId": self.uuid(1).uuidString, "provider": "claude", "observedAt": observed, "lastReportAt": reported, "lastError": "No fresh measured quota is available."]
+            ], "nextCursor": self.uuid(1).uuidString, "reportRetentionDays": 90])
+        }
+        XCTAssertEqual(result.accounts.map(\.id), [uuid(1), uuid(7)])
+        XCTAssertEqual(result.accounts.map(\.provider), [.claude, .codex])
+        XCTAssertEqual(try XCTUnwrap(result.accounts[0].observedAt).timeIntervalSince1970, 1_792_558_800.123, accuracy: 0.000001)
+        XCTAssertEqual(try XCTUnwrap(result.accounts[0].lastReportAt).timeIntervalSince1970, 1_792_562_820.456, accuracy: 0.000001)
+        XCTAssertNotNil(result.accounts[0].lastError)
+        XCTAssertNil(result.accounts[1].observedAt)
+        XCTAssertNil(result.accounts[1].lastReportAt)
+        XCTAssertNil(result.collectors[0].lastPolledAt)
+        XCTAssertEqual(try XCTUnwrap(result.collectors[1].lastPolledAt).timeIntervalSince1970, 1_792_562_880.789, accuracy: 0.000001)
+        XCTAssertEqual(result.collectors[0].accountIds, [uuid(7)])
+    }
+
+    func testCollectionHealthRejectsInvalidMetadataWithoutInventingAReading() async throws {
+        for (retention, timestamp) in [(30, "2026-10-21T05:00:00Z"), (90, "not-a-date")] {
+            do {
+                _ = try await CloudCollectionHealth.read { _ in
+                    try JSONSerialization.data(withJSONObject: ["accounts": [
+                        ["accountId": self.uuid(1).uuidString, "provider": "codex", "observedAt": timestamp, "lastReportAt": NSNull(), "lastError": NSNull()]
+                    ], "nextCursor": NSNull(), "reportRetentionDays": retention])
+                }
+                XCTFail("Invalid collection metadata accepted")
+            } catch { }
+        }
+        do {
+            _ = try await CloudCollectionHealth.read { _ in throw CloudHTTPError.notFound }
+            XCTFail("Missing health endpoint synthesized data")
+        } catch CloudHTTPError.notFound { }
+    }
 }
