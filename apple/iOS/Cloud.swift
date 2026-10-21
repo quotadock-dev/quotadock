@@ -419,9 +419,9 @@ struct CloudClient {
         self.scope = scope
         self.authorityCheck = authorityCheck
     }
-    func request(_ path: String, method: String = "GET", body: [String: Any]? = nil, timeout: TimeInterval = 20, encodedBody: Data? = nil) async throws -> Data {
+    func request(_ path: String, method: String = "GET", body: [String: Any]? = nil, timeout: TimeInterval = 20, encodedBody: Data? = nil, maximumResponseBytes: Int = 256 * 1024) async throws -> Data {
         try Task.checkCancellation()
-        guard timeout > 0 else { throw SnapshotError.invalid }
+        guard timeout > 0, (1...2 * 1024 * 1024).contains(maximumResponseBytes) else { throw SnapshotError.invalid }
         let deadline = ProcessInfo.processInfo.systemUptime + timeout
         let configuration = URLSessionConfiguration.ephemeral
         configuration.urlCache = nil
@@ -456,7 +456,7 @@ struct CloudClient {
         for try await byte in bytes {
             try Task.checkCancellation()
             guard ProcessInfo.processInfo.systemUptime < deadline else { throw SnapshotError.invalid }
-            guard data.count < (successful ? 256 * 1024 : 4096) else {
+            guard data.count < (successful ? maximumResponseBytes : 4096) else {
                 if !successful { throw CloudHTTPError.classify(status: response.statusCode, data: Data(), retryAfter: response.value(forHTTPHeaderField: "Retry-After")) }
                 throw SnapshotError.invalid
             }
@@ -875,11 +875,14 @@ final class CloudModel: NSObject, ObservableObject, ASAuthorizationControllerDel
     private var refreshIntent: CloudRefreshIntent? {
         didSet { if refreshIntent == nil, loadedIntent { CloudRefreshIntentStore.remove() } }
     }
-    private let requests = CloudRequestScope()
+    let requests = CloudRequestScope()
+    @Published var pendingMFA: CloudMFAChallenge?
+    @Published var pendingRecoveryCodes: [String] = []
+    var securityEpoch = 0
     private var renewalTask: (id: UUID, task: Task<CloudClient, Error>)?
     var foreground = true {
         didSet {
-            if !foreground { renewalTask?.task.cancel(); pollingTask?.cancel(); liveTask?.cancel(); requests.cancel() }
+            if !foreground { securityEpoch += 1; pendingRecoveryCodes = []; pendingMFA = nil; renewalTask?.task.cancel(); pollingTask?.cancel(); liveTask?.cancel(); requests.cancel() }
             else if liveEnabled { scheduleLive() }
         }
     }
@@ -1073,6 +1076,11 @@ final class CloudModel: NSObject, ObservableObject, ASAuthorizationControllerDel
                 let data = try await client.request("v2/auth/apple", method: "POST", body: [
                     "challengeId": challenge.id, "identityToken": jwt,
                     "consent": ["quotaStorage": true, "collectorProcessing": true]])
+                if let factor = try CloudMFAChallenge.decodeIfRequired(data, base: client.baseURL) {
+                    guard revision == challenge.revision, foreground, !Task.isCancelled else { return }
+                    pendingMFA = factor
+                    return
+                }
                 let next = try CloudSession.login(data, baseURL: client.baseURL)
                 guard revision == challenge.revision else {
                     try? await CloudClient.revoke(next)
@@ -1082,6 +1090,11 @@ final class CloudModel: NSObject, ObservableObject, ASAuthorizationControllerDel
                     try? await CloudClient.revoke(next)
                     throw CancellationError()
                 }
+                await installLogin(next)
+            } catch { if revision == challenge.revision { status = "Server sign-in failed. No cloud session saved." } }
+        }
+    }
+    func installLogin(_ next: CloudSession) async {
                 let generation: UUID
                 do { generation = try ConnectionStore.select(.cloud, credential: CloudSessionStore.encoded(next)) }
                 catch {
@@ -1107,12 +1120,13 @@ final class CloudModel: NSObject, ObservableObject, ASAuthorizationControllerDel
                     }
                 }
                 await read(internalWork: true)
-            } catch { if revision == challenge.revision { status = "Server sign-in failed. No cloud session saved." } }
-        }
     }
     // Memory-only invalidation after a durable selection; never delete or
     // select another authority as a side effect of installing the new one.
     func resetMemory() {
+        securityEpoch += 1
+        pendingRecoveryCodes = []
+        pendingMFA = nil
         pollingTask?.cancel()
         CloudRefreshIntentStore.remove()
         refreshIntent = nil
@@ -1633,6 +1647,10 @@ struct CloudView: View {
         let _ = locale
         Form {
             Text(DockL10n.text(model.status)).font(.caption)
+            if !model.pendingRecoveryCodes.isEmpty {
+                RecoveryCodesView(codes: model.pendingRecoveryCodes) { model.pendingRecoveryCodes = [] }
+            }
+            if model.pendingMFA != nil { CloudMFAView(model: model) }
             if model.session == nil {
                 TextField(DockL10n.text("Trusted HTTPS server"), text: $base).textInputAutocapitalization(.never).autocorrectionDisabled().disabled(model.busy)
                 Text(DockL10n.text("Only connect to a server you trust. The server stores sanitized quota, a pseudonymous Apple account, sessions and refresh counters — not provider credentials. A local collector processes quota for your slots. You can instead use Pair bridge without cloud."))
@@ -1644,7 +1662,7 @@ struct CloudView: View {
                     let storage = quotaStorageConsent
                     let processing = collectorProcessingConsent
                     Task { await model.connect(base: trustedBase, quotaStorageConsent: storage, collectorProcessingConsent: processing) }
-                }.disabled(!quotaStorageConsent || !collectorProcessingConsent || model.busy)
+                }.disabled(!quotaStorageConsent || !collectorProcessingConsent || model.busy || model.pendingMFA != nil || !model.pendingRecoveryCodes.isEmpty)
             } else {
                 Text(model.me?.budget ?? "")
                 if model.snapshot?.cachedSubset == true {
@@ -1706,6 +1724,11 @@ struct CloudView: View {
                 Button(DockL10n.text("Delete cloud account and data"), role: .destructive) { confirmDelete = true }
             }
             Section {
+                if model.session != nil {
+                    NavigationLink(CloudWords.text("Security", "보안", locale)) { CloudSecurityView(model: model) }
+                    NavigationLink(CloudWords.text("Customer support", "고객 지원", locale)) { CloudSupportView(model: model) }
+                    NavigationLink(CloudWords.text("Operator support", "운영자 지원", locale)) { CloudAdminView(model: model) }
+                }
                 NavigationLink(DockL10n.text("Plans")) { PlansView(model: model) }
             }
         }.navigationTitle(DockL10n.text("Optional cloud"))
