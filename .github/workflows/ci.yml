@@ -1,0 +1,156 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bridge:
+    name: Node 22 bridge, React browser and imported skill tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - run: npm ci --ignore-scripts
+      - run: npx playwright install --with-deps chromium
+      - run: npm test -- --project=chromium
+      - run: python3 .agents/skills/checking-codexbar-usage/scripts/test_codexbar.py
+  webkit:
+    name: macOS WebKit dashboard controls and language tests
+    runs-on: macos-15
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npx playwright install --with-deps webkit
+      - run: npm run build
+      - run: npm run test:web -- --project=webkit
+  storage:
+    name: Non-root portable storage and bridge failure contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Execute production Foundation code without Apple framework emulation
+        run: |
+          docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges \
+            --user "$(id -u):$(id -g)" -e HOME=/tmp \
+            -v "${GITHUB_WORKSPACE}:/workspace:ro" -w /workspace/apple \
+            swift@sha256:6e43114610e161e38ad41636ebcafd6940dc67dfab355eace3a0ca100b2263db \
+            swift test --scratch-path /tmp/quotadock-swift-build -j 2
+  apple:
+    name: iPhone and Watch simulator build and contract tests
+    runs-on: macos-15
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - run: brew install xcodegen
+      - name: Generate project
+        working-directory: apple
+        run: xcodegen generate
+      - name: Test on available iPhone simulator
+        working-directory: apple
+        shell: bash
+        run: |
+          set -euo pipefail
+          DEVICE=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(x["udid"] for k,v in d["devices"].items() if "iOS" in k for x in v if "iPhone" in x["name"]))')
+          echo "SIMULATOR_ID=$DEVICE" >> "$GITHUB_ENV"
+          # Simulator-only ad-hoc signing preserves the App Group entitlement.
+          # Disabling signing makes the real generation-fenced cache inaccessible.
+          # No Apple account, signing certificate, or provisioning profile is used.
+          xcodebuild -project QuotaDock.xcodeproj -scheme QuotaDock -destination "platform=iOS Simulator,id=$DEVICE" -derivedDataPath DerivedData -resultBundlePath NativeTests.xcresult -parallel-testing-enabled NO test CODE_SIGN_IDENTITY=- CODE_SIGNING_ALLOWED=YES
+      - name: Test isolated UI preview without production capabilities
+        working-directory: apple
+        run: |
+          xcodegen generate --spec project-preview.yml
+          xcodebuild -project QuotaDockPreview.xcodeproj -scheme QuotaDockPreview -destination "platform=iOS Simulator,id=$SIMULATOR_ID" -derivedDataPath DerivedData/Preview -resultBundlePath PreviewTests.xcresult -parallel-testing-enabled NO test CODE_SIGN_IDENTITY=- CODE_SIGNING_ALLOWED=YES
+      - name: Export native interaction screenshots
+        if: always()
+        working-directory: apple
+        run: |
+          if [ -d NativeTests.xcresult ]; then
+            xcrun xcresulttool export attachments --path NativeTests.xcresult --output-path NativeAttachments
+          fi
+          if [ -d PreviewTests.xcresult ]; then
+            xcrun xcresulttool export attachments --path PreviewTests.xcresult --output-path PreviewAttachments
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: native-test-results
+          path: |
+            apple/NativeAttachments
+            apple/NativeTests.xcresult
+            apple/PreviewAttachments
+            apple/PreviewTests.xcresult
+          retention-days: 7
+      - name: Build Watch app and complications
+        working-directory: apple
+        run: |
+          xcodebuild -project QuotaDock.xcodeproj -target QuotaDockWatch -sdk watchsimulator build CODE_SIGNING_ALLOWED=NO
+          xcodebuild -project QuotaDock.xcodeproj -target QuotaDockWatchWidgets -sdk watchsimulator build CODE_SIGNING_ALLOWED=NO
+      - name: Capture rendered native demo
+        working-directory: apple
+        run: |
+          xcrun simctl bootstatus "$SIMULATOR_ID" -b
+          xcrun simctl install "$SIMULATOR_ID" DerivedData/Build/Products/Debug-iphonesimulator/QuotaDock.app
+          xcrun simctl ui "$SIMULATOR_ID" appearance light
+          xcrun simctl launch "$SIMULATOR_ID" com.quotadock.app --demo --language-en-preview
+          sleep 5
+          xcrun simctl io "$SIMULATOR_ID" screenshot native-demo.png
+          xcrun simctl ui "$SIMULATOR_ID" appearance dark
+          sleep 2
+          xcrun simctl io "$SIMULATOR_ID" screenshot native-dark.png
+          xcrun simctl ui "$SIMULATOR_ID" appearance light
+          for STATE in unknown settings cloud connection-error cloud-expired cloud-erasing batch widgets widgets-overview widgets-accessories watch watch-stale accessibility purchases purchases-unavailable purchases-pending purchases-error; do
+            xcrun simctl terminate "$SIMULATOR_ID" com.quotadock.app
+            xcrun simctl launch "$SIMULATOR_ID" com.quotadock.app --demo --language-en-preview "--${STATE}-preview"
+            sleep 3
+            xcrun simctl io "$SIMULATOR_ID" screenshot "native-${STATE}.png"
+          done
+          for LANGUAGE in en ko; do
+            for STATE in welcome connection preferences; do
+              xcrun simctl terminate "$SIMULATOR_ID" com.quotadock.app
+              xcrun simctl launch "$SIMULATOR_ID" com.quotadock.app --demo "--language-${LANGUAGE}-preview" "--onboarding-${STATE}-preview"
+              sleep 3
+              xcrun simctl io "$SIMULATOR_ID" screenshot "native-setup-${LANGUAGE}-${STATE}.png"
+            done
+          done
+          for STATE in settings cloud widgets-overview watch purchases; do
+            xcrun simctl terminate "$SIMULATOR_ID" com.quotadock.app
+            xcrun simctl launch "$SIMULATOR_ID" com.quotadock.app --demo --language-ko-preview "--${STATE}-preview"
+            sleep 3
+            xcrun simctl io "$SIMULATOR_ID" screenshot "native-ko-${STATE}.png"
+          done
+          xcrun simctl terminate "$SIMULATOR_ID" com.quotadock.app
+          xcrun simctl launch "$SIMULATOR_ID" com.quotadock.app --demo --language-ko-preview --onboarding-preferences-preview --large-text-preview
+          sleep 3
+          xcrun simctl io "$SIMULATOR_ID" screenshot native-setup-ko-large.png
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: native-demo
+          path: apple/native-*.png
+          retention-days: 7

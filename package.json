@@ -1,0 +1,21 @@
+{
+  "name": "quotadock",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local-first AI quota bridge for iPhone, Apple Watch and widgets",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "start": "npm run build && node bridge/cli.mjs serve",
+    "demo": "npm run build && node bridge/cli.mjs serve --demo",
+    "status": "node bridge/cli.mjs status",
+    "test": "npm run build && node --test bridge/*.test.mjs && playwright test --config web/playwright.config.ts",
+    "typecheck": "tsc --noEmit -p web/tsconfig.json",
+    "build": "npm run typecheck && vite build --config web/vite.config.ts",
+    "preview": "vite preview --config web/vite.config.ts --host 127.0.0.1",
+    "test:web": "playwright test --config web/playwright.config.ts"
+  },
+  "dependencies": { "react": "19.1.1", "react-dom": "19.1.1" },
+  "devDependencies": { "@types/react": "19.1.10", "@types/react-dom": "19.1.9", "typescript": "5.9.2", "vite": "7.3.7", "@playwright/test": "1.64.0" },
+  "license": "MIT"
+}

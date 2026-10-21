@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
   - name: Security reporting
-    url: https://github.com/deploy103/quotadock/blob/main/SECURITY.md
+    url: https://github.com/quotadock-dev/quotadock/blob/main/SECURITY.md
     about: Read the private reporting policy; never post secrets publicly.
