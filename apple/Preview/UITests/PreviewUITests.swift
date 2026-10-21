@@ -25,8 +25,9 @@ final class PreviewUITests: XCTestCase {
                 let toggle = app.switches["quota-alerts-enabled"]
                 assertHistoryFullyReachable(toggle, in: app, name: variant + " off control")
                 XCTAssertEqual(toggle.value as? String, "0")
-                captureAlerts(app, variant + "-off")
-                toggle.tap()
+                captureAlerts(app, variant + "-off", reading: toggle)
+                pressAlertSwitch(toggle, in: app, name: variant + " enable")
+                captureAlerts(app, variant + "-enabled", reading: toggle)
                 let marker20 = korean ? "20% 이하로 관측됨" : "Observed at or below 20%"
                 let marker30 = korean ? "30% 이하로 관측됨" : "Observed at or below 30%"
                 func reading(_ label: String) -> XCUIElement {
@@ -42,9 +43,9 @@ final class PreviewUITests: XCTestCase {
                     (credits, korean ? "20% 남음" : "20% remaining", false)
                 ] {
                     assertHistoryFullyReachable(element, in: app, name: variant + " 20% " + expected)
+                    captureAlerts(app, variant + "-20-" + element.label, reading: element)
                     XCTAssertTrue((element.value as? String ?? "").hasPrefix(expected))
                     XCTAssertEqual((element.value as? String ?? "").contains(marker20), marked)
-                    captureAlerts(app, variant + "-20-" + element.label)
                 }
                 // 20.001% rounds to 20% on screen, but must not mark at 20%.
                 // A larger threshold must mark that same independent window.
@@ -57,16 +58,16 @@ final class PreviewUITests: XCTestCase {
                 XCTAssertEqual(toggle.value as? String, "1")
                 for element in [session, credits] {
                     assertHistoryFullyReachable(element, in: app, name: variant + " restored 30% " + element.label)
+                    captureAlerts(app, variant + "-30-" + element.label, reading: element)
                     XCTAssertTrue((element.value as? String ?? "").contains(marker30))
-                    captureAlerts(app, variant + "-30-" + element.label)
                 }
                 // Both are fresh and zero: only their demo/history role excludes them.
                 for label in [korean ? "일간" : "Daily", "Pro"] {
                     let excluded = reading(label)
                     assertHistoryFullyReachable(excluded, in: app, name: variant + " excluded " + label)
+                    captureAlerts(app, variant + "-excluded-" + label, reading: excluded)
                     XCTAssertTrue((excluded.value as? String ?? "").hasPrefix(korean ? "0% 남음" : "0% remaining"))
                     XCTAssertFalse((excluded.value as? String ?? "").contains(marker30))
-                    captureAlerts(app, variant + "-excluded-" + label)
                 }
                 if !korean && !largest {
                     scrollAlertsToTop(app)
@@ -79,26 +80,44 @@ final class PreviewUITests: XCTestCase {
                         format: "NOT (value CONTAINS %@)", marker30), object: session)
                     XCTAssertEqual(XCTWaiter.wait(for: [expired], timeout: 25), .completed)
                     XCTAssertTrue((session.value as? String ?? "").hasPrefix("0% remaining"))
-                    captureAlerts(app, variant + "-expired")
+                    captureAlerts(app, variant + "-expired", reading: session)
                 }
                 scrollAlertsToTop(app)
                 assertHistoryFullyReachable(toggle, in: app, name: variant + " disable control")
-                toggle.tap()
+                pressAlertSwitch(toggle, in: app, name: variant + " disable")
                 app.terminate(); app.launch()
                 XCTAssertTrue(toggle.waitForExistence(timeout: 8))
                 XCTAssertEqual(toggle.value as? String, "0")
                 assertHistoryFullyReachable(session, in: app, name: variant + " disabled reading")
                 XCTAssertFalse((session.value as? String ?? "").contains(marker30))
-                captureAlerts(app, variant + "-disabled")
+                captureAlerts(app, variant + "-disabled", reading: session)
                 app.terminate()
             }
         }
     }
 
-    private func captureAlerts(_ app: XCUIApplication, _ name: String) {
+    private func pressAlertSwitch(_ element: XCUIElement, in app: XCUIApplication, name: String) {
+        // Form's outer AX switch spans the label. Its center tap was at x=201,
+        // outside the actual x=313...364 control. Use the established production
+        // onboarding gesture, retaining the state-change assertion (no retries).
+        let nested = element.switches.firstMatch
+        let control = nested.exists ? nested : element
+        assertHistoryFullyReachable(control, in: app, name: name + " native switch")
+        let wasOn = control.value as? String == "1"
+        control.coordinate(withNormalizedOffset: CGVector(dx: wasOn ? 0.8 : 0.2, dy: 0.5)).press(forDuration: 0.3)
+        XCTAssertEqual(element.value as? String, wasOn ? "0" : "1", name)
+    }
+
+    private func captureAlerts(_ app: XCUIApplication, _ name: String, reading: XCUIElement? = nil) {
         capture(app, name)
         let hierarchy = XCTAttachment(string: app.debugDescription)
         hierarchy.name = name + "-AX"; hierarchy.lifetime = .keepAlways; add(hierarchy)
+        if let reading {
+            // debugDescription truncates long values; retain the actual public
+            // accessibility value independently of that textual tree rendering.
+            let value = XCTAttachment(string: "label=\(reading.label)\nvalue=\(reading.value as? String ?? "<nil>")\nframe=\(reading.frame)")
+            value.name = name + "-value"; value.lifetime = .keepAlways; add(value)
+        }
     }
 
     private func scrollAlertsToTop(_ app: XCUIApplication) {
