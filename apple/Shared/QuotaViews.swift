@@ -119,7 +119,7 @@ struct RemainingBar: View {
             }
             if let lowQuotaThreshold {
                 Label(DockL10n.format("Observed at or below %d%%", lowQuotaThreshold), systemImage: "exclamationmark.triangle")
-                    .font(.caption).foregroundStyle(.orange)
+                    .font(.caption).foregroundStyle(.primary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             if let reset = window.resetsAt {
