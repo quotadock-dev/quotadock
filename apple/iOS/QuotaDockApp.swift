@@ -253,7 +253,11 @@ struct DockView: View {
                         Button(setupText("Settings"), systemImage: "gearshape") { showSettings = true }
                     }
                 }
-                .sheet(isPresented: $showPairing) { PairingView(model: model) }
+                .sheet(isPresented: $showPairing, onDismiss: {
+                    #if DEBUG
+                    print("PAIRING_PRESENTATION onDismiss")
+                    #endif
+                }) { PairingView(model: model) }
                 .sheet(isPresented: $showAccounts, onDismiss: { requestedAccountID = nil }) {
                     CloudAccountsView(model: model.cloud, requestedAccountID: requestedAccountID,
                                       lowQuotaThreshold: settings.lowQuotaThreshold)
@@ -307,6 +311,11 @@ struct DockView: View {
                 }
                 .onChange(of: requestedAccountID) { _, id in
                     if id != nil { showAccounts = true }
+                }
+                .onChange(of: showPairing) { _, presented in
+                    #if DEBUG
+                    print("PAIRING_PRESENTATION state=\(presented)")
+                    #endif
                 }
         }
     }
@@ -427,7 +436,14 @@ struct PairingView: View {
                     }
                 }
             }.navigationTitle(setupText("Pair bridge"))
-                .toolbar { Button(setupText("Cancel")) { token = ""; dismiss() } }
+                .toolbar {
+                    Button(setupText("Cancel")) {
+                        #if DEBUG
+                        print("PAIRING_PRESENTATION cancelAction")
+                        #endif
+                        token = ""; dismiss()
+                    }
+                }
         }
     }
 }

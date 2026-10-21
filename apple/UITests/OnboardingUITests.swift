@@ -61,6 +61,7 @@ final class OnboardingUITests: XCTestCase {
         XCTAssertTrue(token.exists)
         capture("EN-setup-bridge")
         tap(app.buttons["Cancel"])
+        capturePairingBoundary("EN-setup-after-pairing-cancel")
         openSettings(korean: false)
         tap(app.buttons["Review setup"])
         tap(app.buttons["setup-continue"])
@@ -211,6 +212,7 @@ final class OnboardingUITests: XCTestCase {
             if visible() { return }
             app.swipeUp()
         }
+        if !visible() { capturePairingBoundary("reachability-failure") }
         XCTAssertTrue(visible(), "Element must be reachable without footer overlap: \(element)")
     }
 
@@ -229,6 +231,15 @@ final class OnboardingUITests: XCTestCase {
         reveal(control)
         let thumbX = control.value as? String == "1" ? 0.8 : 0.2
         control.coordinate(withNormalizedOffset: CGVector(dx: thumbX, dy: 0.5)).press(forDuration: 0.3)
+    }
+
+    private func capturePairingBoundary(_ name: String) {
+        let settings = app.buttons["Settings"]
+        let flags = "pairingExists=\(app.navigationBars["Pair bridge"].exists); cancelExists=\(app.buttons["Cancel"].exists); settingsExists=\(settings.exists)"
+            + (settings.exists ? "; enabled=\(settings.isEnabled); hittable=\(settings.isHittable); frame=\(settings.frame)" : "")
+        print("PAIRING_BOUNDARY \(name): \(flags)")
+        let attachment = XCTAttachment(string: flags + "\n" + app.debugDescription)
+        attachment.name = name + "-AX"; attachment.lifetime = .keepAlways; add(attachment)
     }
 
     private func capture(_ name: String) {
