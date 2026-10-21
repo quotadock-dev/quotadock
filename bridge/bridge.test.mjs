@@ -9,6 +9,7 @@ import http from 'node:http';
 import { snapshotFromRows, demoSnapshot } from './snapshot.mjs';
 import { collect, cachedCollector } from './collector.mjs';
 import { createBridge } from './server.mjs';
+import { formatStatus } from './status.mjs';
 
 test('upstream used percentages become remaining; null/placeholder/error are not exhaustion and identities never leave host', () => {
   const snapshot = snapshotFromRows([
@@ -147,4 +148,69 @@ test('init preserves an existing token and refuses insecure token file permissio
   await run('init'); assert.equal(await readFile(file, 'utf8'), token);
   await chmod(file, 0o644);
   await assert.rejects(run('serve', '--demo'), error => error.stderr.includes('mode 0600') && !error.stderr.includes(token.trim()));
+});
+
+test('status text preserves independent measured, zero and unknown windows without exposing upstream text; default stays JSON', async t => {
+  const dir = await mkdtemp(join(tmpdir(), 'quotadock-status-test-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const fake = join(dir, 'codexbar');
+  await writeFile(fake, `#!${process.execPath}
+const id = process.argv[process.argv.indexOf('--provider') + 1];
+const usage = { loginMethod: 'Max', updatedAt: '2020-01-02T03:04:05Z',
+  primary: { usedPercent: 100, resetsAt: '2020-01-02T04:00:00Z' },
+  secondary: { usedPercent: 72.75 }, tertiary: { usedPercent: 0, isSyntheticPlaceholder: true } };
+if (id === 'grok') process.stdout.write(JSON.stringify([{ provider: id, error: { message: 'privatecredential\\u001b[2J private@example.com' } }]));
+else process.stdout.write(JSON.stringify([{ provider: id, usage: id === 'claude' ? usage : { ...usage, updatedAt: null, loginMethod: 'privatecredential' } }]));
+`, { mode: 0o700 });
+  const run = (...args) => promisify(execFile)(process.execPath, ['bridge/cli.mjs', ...args], {
+    cwd: new URL('..', import.meta.url), env: { ...process.env, QUOTADOCK_CODEXBAR_BIN: fake },
+  });
+  const json = JSON.parse((await run('status')).stdout);
+  assert.equal(json.schemaVersion, 1);
+  assert.equal(json.demo, false);
+  assert.deepEqual(json.providers[0].windows.map(window => window.remainingPercent), [0, 27.25, null]);
+  const en = (await run('status', '--text')).stdout;
+  assert.match(en, /Allowmark · LOCAL CHECK/);
+  assert.match(en, /Claude · Plan: Max/);
+  assert.match(en, /Observed: 2020-01-02T03:04:05\.000Z · STALE/);
+  assert.ok(en.includes('Session [------------------------------] 0% remaining'));
+  assert.ok(en.includes('Weekly [########----------------------] 27.25% remaining'));
+  assert.ok(en.includes('Additional [??????????????????????????????] Unknown'));
+  assert.match(en, /Reset: 2020-01-02T04:00:00\.000Z/);
+  assert.match(en, /Codex · Plan: Unknown\n  Observed: Unknown · UNKNOWN TIME/);
+  assert.match(en, /Grok · Plan: Unknown/);
+  assert.match(en, /Times are UTC.*Windows are independent.*does not refill.*not total ChatGPT usage/);
+  const ko = (await run('status', '--text', '--language=ko')).stdout;
+  assert.match(ko, /Claude · 요금제: Max/);
+  assert.ok(ko.includes('세션 [------------------------------] 0% 남음'));
+  assert.ok(ko.includes('추가 [??????????????????????????????] 알 수 없음'));
+  assert.match(ko, /오래된 관측/);
+  assert.match(ko, /각 구간은 독립적이며 합산하지 않습니다/);
+  assert.doesNotMatch(en + ko + JSON.stringify(json), /privatecredential|private@example|\u001b/);
+  const demo = (await run('status', '--text', '--demo', '--language=en')).stdout;
+  assert.match(demo, /DEMO · SAMPLE DATA/);
+  for (const args of [['serve', '--text'], ['init', '--text'], ['status', '--language=ko'],
+    ['status', '--text', '--language=fr'], ['status', '--text', '--language=en', '--language=ko']]) {
+    await assert.rejects(run(...args), error => error.stdout === '' && error.stderr.includes('Usage:'));
+  }
+});
+
+test('text freshness follows the original observation boundary, not generated or reset times', () => {
+  const observedAt = '2026-10-21T10:00:00Z';
+  const snapshot = snapshotFromRows([{ provider: 'claude', usage: { updatedAt: observedAt,
+    primary: { usedPercent: 1.25, resetsAt: observedAt } } },
+  { provider: 'codex', usage: { updatedAt: observedAt, primary: { usedPercent: 99.996 },
+    secondary: { usedPercent: 0.0001 }, tertiary: { usedPercent: 0 } } }], new Date('2026-10-21T12:00:00Z'));
+  const now = Date.parse(observedAt);
+  assert.match(formatStatus(snapshot, { now: now + 900000 }), /Observed: .* · RECENT OBSERVATION/);
+  const expired = formatStatus(snapshot, { now: now + 900001 });
+  assert.match(expired, /Observed: .* · STALE/);
+  assert.match(expired, /98\.75% remaining/);
+  assert.match(formatStatus(snapshot, { now: now - 1 }), /Observed: .* · FUTURE TIMESTAMP/);
+  assert.ok(expired.includes('Session [#-----------------------------] Less than 0.01% remaining'));
+  assert.ok(expired.includes('Weekly [#############################-] More than 99.99% remaining'));
+  assert.ok(expired.includes('Additional [##############################] 100% remaining'));
+  const ko = formatStatus(snapshot, { language: 'ko', now });
+  assert.match(ko, /0\.01% 미만 남음/);
+  assert.match(ko, /99\.99% 초과 남음/);
 });

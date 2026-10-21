@@ -5,6 +5,7 @@ import { randomBytes } from 'node:crypto';
 import { collect, cachedCollector } from './collector.mjs';
 import { demoSnapshot } from './snapshot.mjs';
 import { createBridge } from './server.mjs';
+import { formatStatus } from './status.mjs';
 
 const file = resolve(process.env.QUOTADOCK_TOKEN_FILE || `${homedir()}/.config/quotadock/token`);
 async function initToken() {
@@ -24,11 +25,23 @@ async function readToken() {
 }
 async function main() {
   const [command, ...flags] = process.argv.slice(2);
-  if (!['init', 'status', 'serve'].includes(command) || flags.some(flag => flag !== '--demo') || (command === 'init' && flags.length)) throw new Error('Usage: node bridge/cli.mjs init | status [--demo] | serve [--demo]');
+  const text = flags.includes('--text');
+  const languages = flags.filter(flag => flag.startsWith('--language='));
+  if (!['init', 'status', 'serve'].includes(command)
+    || flags.some(flag => !['--demo', '--text', '--language=en', '--language=ko'].includes(flag))
+    || (command === 'init' && flags.length)
+    || (command !== 'status' && (text || languages.length))
+    || (languages.length && !text) || languages.length > 1) {
+    throw new Error('Usage: node bridge/cli.mjs init | status [--demo] [--text [--language=en|ko]] | serve [--demo]');
+  }
   if (command === 'init') return initToken();
   const demo = flags.includes('--demo');
   const getSnapshot = cachedCollector(demo ? async () => demoSnapshot() : () => collect({ binary: process.env.QUOTADOCK_CODEXBAR_BIN || 'codexbar' }));
-  if (command === 'status') { process.stdout.write(`${JSON.stringify(await getSnapshot(), null, 2)}\n`); return; }
+  if (command === 'status') {
+    const snapshot = await getSnapshot();
+    process.stdout.write(text ? formatStatus(snapshot, { language: languages[0]?.slice('--language='.length) ?? 'en' }) : `${JSON.stringify(snapshot, null, 2)}\n`);
+    return;
+  }
   const host = process.env.QUOTADOCK_HOST || '127.0.0.1';
   const port = Number(process.env.QUOTADOCK_PORT || 8787);
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('Invalid port.');
