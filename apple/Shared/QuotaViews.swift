@@ -209,14 +209,17 @@ struct ProviderCard: View {
 
     @ViewBuilder private var currentWindows: some View {
         #if os(iOS)
-        if lowQuotaThreshold != nil && !demo && provider.source == .codexbar {
+        if lowQuotaThreshold != nil && !demo && provider.source == .codexbar,
+           let observed = provider.observedAt {
             let now = Date()
-            let expiry = provider.observedAt?.addingTimeInterval(900.001) ?? now
+            let expiry = observed.addingTimeInterval(900.001)
             // One expiry refresh, not polling or collection. An open card must
-            // stop marking the observation after the freshness boundary passes.
-            TimelineView(.explicit(expiry > now ? [now, expiry] : [now])) { context in
-                VStack(alignment: .leading, spacing: 16) { quotaWindows(at: context.date) }
+            // replace its schedule when the source observation changes. Context
+            // dates are schedule entries, not necessarily the actual read time.
+            TimelineView(.explicit(expiry > now ? [now, expiry] : [now])) { _ in
+                VStack(alignment: .leading, spacing: 16) { quotaWindows(at: Date()) }
             }
+            .id(observed)
         } else { quotaWindows(at: Date()) }
         #else
         quotaWindows(at: Date())
