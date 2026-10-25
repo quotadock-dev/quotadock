@@ -42,11 +42,13 @@ struct CloudAdminView: View {
     @State private var token: String?
     @State private var expiry: Date?
     @State private var generation = UUID()
+    @State private var operation: Task<Void, Never>?
+    @State private var expiryTask: Task<Void, Never>?
+    @State private var confirmDiscard = false
     @State private var working = false
     @State private var notice = ""
     @State private var filter = "all"
-    @State private var tickets: [AdminTicket] = []
-    @State private var loaded = false
+    @State private var paging = CloudSupportPager()
     @State private var selected: AdminTicket?
     @State private var messages: [AdminMessage] = []
     @State private var operators: [AdminOperator] = []
@@ -80,8 +82,10 @@ struct CloudAdminView: View {
         }
     }
     private func words(_ en: String, _ ko: String) -> String { CloudWords.text(en, ko, locale) }
+    private var hasDraft: Bool { !message.isEmpty || pending != nil }
     private var elevated: Bool {
-        model.foreground && scenePhase == .active && token != nil && token == model.session?.token && (expiry ?? .distantPast) > Date()
+        model.foreground && scenePhase == .active && token != nil && token == model.session?.token
+            && (expiry ?? .distantPast) > Date() && (model.session?.expiresAt ?? .distantPast) > Date()
     }
 
     var body: some View {
@@ -100,15 +104,22 @@ struct CloudAdminView: View {
                 }
                 if !notice.isEmpty { Text(notice) }
                 if working { ProgressView(words("Loading", "불러오는 중")) }
+                if hasDraft {
+                    Text(words("Finish or discard the draft before changing page, filter or ticket.", "페이지·필터·문의를 바꾸기 전에 초안을 전송하거나 버리세요."))
+                    Button(words("Discard draft / retry information…", "초안 / 재시도 정보 버리기…"), role: .destructive) { confirmDiscard = true }
+                }
             }
             Section(words("Ticket queue", "문의 대기열")) {
+                Text(words("Creation order, 50 per page. Older replaces the list; Latest starts again. Assignments can change after a read. Leaving or backgrounding clears pages and drafts.", "생성 시각 순으로 페이지당 최대 50건입니다. 이전 페이지는 목록을 교체하고 최신 조회는 처음부터 시작합니다. 조회 후 배정이 바뀔 수 있습니다. 화면을 나가거나 백그라운드로 전환하면 페이지와 초안이 지워집니다."))
+                    .font(.caption)
                 Picker(words("Status filter", "상태 필터"), selection: $filter) {
                     Text(words("All", "전체")).tag("all")
                     statusOptions
                 }
-                Button(words("Load tickets", "문의 불러오기")) { run { try await list() } }
-                if loaded && tickets.isEmpty { Text(words("No visible tickets for this filter.", "이 필터에서 볼 수 있는 문의가 없습니다.")) }
-                ForEach(tickets) { ticket in
+                Button(words("Load latest tickets", "최신 문의 불러오기")) { run { try await list() } }
+                    .accessibilityIdentifier("admin.latest")
+                if elevated && paging.loaded && paging.tickets.isEmpty { Text(words("No visible tickets on this page for this filter.", "이 필터의 현재 페이지에서 볼 수 있는 문의가 없습니다.")) }
+                ForEach(elevated ? paging.tickets : []) { ticket in
                     Button { run { try await detail(ticket.id) } } label: {
                         VStack(alignment: .leading) {
                             Text(verbatim: ticket.subject)
@@ -116,8 +127,16 @@ struct CloudAdminView: View {
                         }
                     }
                 }
-            }.disabled(!elevated)
-            if let selected {
+                if elevated && paging.failed {
+                    Button(words("Retry this page", "이 페이지 다시 조회")) { run { try await list(retry: true) } }
+                } else if elevated && paging.nextCursor != nil {
+                    Button(words("Older tickets", "이전 문의")) { run { try await list(older: true) } }
+                        .accessibilityIdentifier("admin.older")
+                } else if elevated && paging.loaded {
+                    Text(words("End of tickets for this filter. Load latest to check changes.", "이 필터의 마지막 문의입니다. 변경 사항은 최신 조회로 확인하세요."))
+                }
+            }.disabled(!elevated || hasDraft)
+            if elevated, let selected {
                 Section(words("Ticket details", "문의 상세")) {
                     Text(verbatim: selected.subject).font(.headline)
                     Text(verbatim: selected.id.uuidString)
@@ -154,19 +173,20 @@ struct CloudAdminView: View {
                     Button(words("Save status and assignment", "상태 및 배정 저장")) { run {
                         struct Result: Decodable { let ticket: AdminTicket }
                         let body: [String: Any] = ["status": status, "assigneeId": assignee.map { $0.uuidString as Any } ?? NSNull()]
+                        clearQueue()
                         let result = try JSONDecoder().decode(Result.self, from: await request("v2/admin/tickets/\(selected.id.uuidString)", method: "PUT", body: body))
                         guard result.ticket.id == selected.id else { throw SnapshotError.invalid }
-                        install(result.ticket)
+                        notice = words("Status/assignment saved. Load latest tickets to recheck visibility.", "상태/배정을 저장했습니다. 최신 문의를 불러와 접근 권한을 다시 확인하세요.")
                     } }
-                }.disabled(!elevated)
+                }.disabled(!elevated || hasDraft)
             }
-            operatorManagement
+            if elevated { operatorManagement }
             Section(words("Operational counts", "운영 집계")) {
                 Button(words("Load metrics", "집계 불러오기")) { run {
                     metrics = try JSONDecoder().decode(AdminMetrics.self, from: await request("v2/admin/metrics"))
                 } }.disabled(!elevated)
                 Text(words("Snapshot counts, not revenue or active-user measurements. Unloaded values are not zero.", "스냅샷 집계이며 매출이나 활성 사용자 지표가 아닙니다. 불러오지 않은 값은 0이 아닙니다."))
-                if let m = metrics {
+                if elevated, let m = metrics {
                     LabeledContent(words("Users", "사용자"), value: "\(m.users)")
                     Text(verbatim: "Claude: \(m.accountProviders.claude) · Codex: \(m.accountProviders.codex) · Gemini: \(m.accountProviders.gemini) · Grok: \(m.accountProviders.grok)")
                     Text(words("Jobs: pending / completed / expired / cached", "작업: 대기 / 완료 / 만료 / 캐시") + "\n\(m.jobs.pending) / \(m.jobs.completed) / \(m.jobs.expired) / \(m.jobs.cached)")
@@ -178,11 +198,18 @@ struct CloudAdminView: View {
         .navigationTitle(words("Operator support", "운영자 지원"))
         .disabled(working)
         .privacySensitive()
+        .confirmationDialog(words("Discard local draft and retry information? A request already sent may still complete on the server.", "로컬 초안과 재시도 정보를 버릴까요? 이미 보낸 요청은 서버에서 완료될 수 있습니다."), isPresented: $confirmDiscard, titleVisibility: .visible) {
+            Button(words("Discard", "버리기"), role: .destructive) { message = ""; internalNote = false; pending = nil }
+        }
         .onDisappear { wipe() }
         .onChange(of: scenePhase) { _, phase in if phase != .active { wipe() } }
         .onChange(of: model.foreground) { _, active in if !active { wipe() } }
         .onChange(of: model.session?.token) { _, _ in wipe() }
         .onChange(of: model.revision) { _, _ in wipe() }
+        .onChange(of: filter) { _, _ in
+            generation = UUID(); operation?.cancel(); operation = nil; working = false
+            clearQueue(); notice = words("Filter changed. Load latest tickets.", "필터가 바뀌었습니다. 최신 문의를 불러오세요.")
+        }
         .onChange(of: notice) { _, value in
             if scenePhase == .active && model.foreground && !value.isEmpty {
                 UIAccessibility.post(notification: .announcement, argument: value)
@@ -291,33 +318,60 @@ struct CloudAdminView: View {
         }
     }
     private func wipe() {
-        generation = UUID(); code = ""; token = nil; expiry = nil
-        tickets = []; loaded = false; selected = nil; messages = []; operators = []; metrics = nil
+        operation?.cancel(); operation = nil; expiryTask?.cancel(); expiryTask = nil; working = false
+        generation = UUID(); code = ""; token = nil; expiry = nil; confirmDiscard = false
+        clearQueue(); operators = []; metrics = nil
         message = ""; internalNote = false; pending = nil; assignee = nil; status = "open"; notice = ""
         operatorUUID = ""; clearOperatorLookup()
     }
+    private func clearQueue() {
+        paging.reset(); selected = nil; messages = []; message = ""; internalNote = false
+        pending = nil; assignee = nil; status = "open"
+    }
     private func run(_ action: @escaping @MainActor () async throws -> Void) {
-        guard !working else { return }
+        guard !working, model.foreground, scenePhase == .active, let exact = model.session?.token else { return }
         working = true; notice = ""
         let current = generation
-        Task { @MainActor in
-            defer { working = false }
+        let owner = model.revision
+        operation = Task { @MainActor in
+            defer { if current == generation { working = false; operation = nil } }
+            guard current == generation, owner == model.revision, model.session?.token == exact, model.foreground, !Task.isCancelled else { return }
             do { try await action() }
             catch {
-                guard current == generation else { return }
-                notice = words("Request failed, permission denied, or verification expired. No automatic retry or renewal. Reads may be retried explicitly; for uncertain sends retry unchanged. Reload ticket before repeating a status change.", "요청 실패, 권한 부족 또는 인증 만료입니다. 자동 재시도나 갱신은 없습니다. 조회는 직접 재시도하세요. 미확인 전송은 변경 없이 재시도하고 상태 변경을 반복하기 전에 문의를 다시 조회하세요.")
+                guard current == generation, owner == model.revision, model.session?.token == exact, model.foreground, !Task.isCancelled else { return }
+                notice = paging.failed
+                    ? words("Page unavailable. Retry this page or load latest. No automatic retry was sent.", "페이지를 불러오지 못했습니다. 이 페이지를 다시 조회하거나 최신 문의를 불러오세요. 자동 재시도하지 않았습니다.")
+                    : words("Request failed, permission denied, or verification expired. Paging requires the matching server API. No automatic retry or renewal. For uncertain sends retry unchanged; reload before repeating a status change.", "요청 실패, 권한 부족 또는 인증 만료입니다. 페이지 조회를 지원하는 서버가 필요합니다. 자동 재시도나 갱신은 없습니다. 미확인 전송은 변경 없이 재시도하고 상태 변경은 다시 조회한 후 진행하세요.")
             }
         }
     }
     private func request(_ path: String, method: String = "GET", body: [String: Any]? = nil, maximumResponseBytes: Int = 256 * 1024) async throws -> Data {
         guard elevated, let token else { throw CancellationError() }
         let current = generation
-        let data = try await model.securityRequest(path, method: method, body: body, exactToken: token, maximumResponseBytes: maximumResponseBytes)
-        guard current == generation, elevated else { throw CancellationError() }
-        return data
+        do {
+            let data = try await model.securityRequest(path, method: method, body: body, exactToken: token, maximumResponseBytes: maximumResponseBytes)
+            guard current == generation, elevated, !Task.isCancelled else { throw CancellationError() }
+            return data
+        } catch {
+            guard current == generation, model.session?.token == token, model.foreground, !Task.isCancelled else { throw CancellationError() }
+            switch error as? CloudHTTPError {
+            case .unauthorized:
+                wipe()
+                notice = words("Session rejected. Return to cloud settings to sign in again.", "세션이 거부되었습니다. 클라우드 설정에서 다시 로그인하세요.")
+            case .rejected(status: 403, code: _):
+                // A manager-only action can be denied to an otherwise valid agent.
+                // Clear protected snapshots without pretending MFA grants that role.
+                clearQueue(); operators = []; metrics = nil; clearOperatorLookup()
+            case .notFound:
+                if path.hasPrefix("v2/admin/tickets") { clearQueue() }
+            default: break
+            }
+            throw error
+        }
     }
     private func stepUp() {
-        let input = code; code = ""
+        let input = code
+        wipe()
         run {
             guard let exact = model.session?.token, scenePhase == .active else { throw CancellationError() }
             let current = generation
@@ -326,23 +380,34 @@ struct CloudAdminView: View {
             let data = try await model.securityRequest("v2/security/step-up", method: "POST", body: ["code": input], exactToken: exact)
             let end = try CloudMFAChallenge.date(JSONDecoder().decode(Grant.self, from: data).expiresAt)
             guard current == generation, model.session?.token == exact, scenePhase == .active, end > Date() else { throw CancellationError() }
-            token = exact; expiry = end
+            let deadline = min(end, model.session?.expiresAt ?? end)
+            token = exact; expiry = deadline
+            expiryTask = Task { @MainActor in
+                do { try await Task.sleep(nanoseconds: UInt64(max(0, deadline.timeIntervalSinceNow) * 1_000_000_000)) }
+                catch { return }
+                guard token == exact, expiry == deadline else { return }
+                wipe()
+                notice = words("Verification expired. Verify again and load latest tickets.", "인증이 만료되었습니다. 다시 인증하고 최신 문의를 불러오세요.")
+            }
         }
     }
-    private func list() async throws {
-        struct Result: Decodable { let tickets: [AdminTicket] }
-        let path = "v2/admin/tickets" + (filter == "all" ? "" : "?status=\(filter)")
-        tickets = try JSONDecoder().decode(Result.self, from: await request(path)).tickets
-        loaded = true
+    private func list(older: Bool = false, retry: Bool = false) async throws {
+        selected = nil; messages = []; message = ""; internalNote = false; pending = nil
+        let read = try paging.begin(older: older, retry: retry, staff: true, status: filter == "all" ? nil : filter)
+        do {
+            let data = try await request(read.path)
+            try paging.finish(data, read: read)
+            notice = words("Ticket page loaded.", "문의 페이지를 불러왔습니다.")
+        } catch { paging.fail(read); throw error }
     }
     private func install(_ ticket: AdminTicket) {
         selected = ticket; status = ticket.status; assignee = ticket.assigneeId
     }
     private func detail(_ id: UUID) async throws {
         struct Result: Decodable { let ticket: AdminTicket; let messages: [AdminMessage] }
+        selected = nil; messages = []; message = ""; internalNote = false; pending = nil
         let result = try JSONDecoder().decode(Result.self, from: await request("v2/admin/tickets/\(id.uuidString)", maximumResponseBytes: 2 * 1024 * 1024))
         guard result.ticket.id == id, result.messages.count <= 100 else { throw SnapshotError.invalid }
-        if selected?.id != id { message = ""; internalNote = false; pending = nil }
         install(result.ticket); messages = result.messages
     }
     private func send() {
