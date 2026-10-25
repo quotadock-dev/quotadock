@@ -112,6 +112,29 @@ operator acceptance remain release gates.
 문의 제목·분류·메시지와 담당자·내부 메모도 저장되므로 비밀 정보를 보내지 마세요.
 실제 Apple 로그인·복구·운영자 업무 검증과 운영 서버 반영은 아직 완료되지 않았습니다.
 
+Customer and operator support now use the additive `/tickets/page` routes in
+native source. **Older tickets** replaces the current page (up to 50), and
+**Refresh / Load latest tickets** restarts at the newest creation time. A failed
+page clears its payload and offers an explicit retry of that same cursor/filter;
+it is not the end of the list. There is no legacy newest-50 fallback. Finish or
+explicitly discard a draft before changing page/filter/ticket. Discarding retry
+information cannot cancel a request already committed on the server.
+
+Pages, conversations and drafts stay in view memory and clear on exit,
+background, session replacement or expiry. Support operations never silently
+renew their captured bearer; return to cloud settings to refresh/sign in if it
+expires. Operator MFA is exact-token and clears at the earlier access/MFA
+deadline. Every read/write rechecks server permissions; reassignment cannot
+instantly recall an already displayed snapshot without a server invalidation
+channel. Denied ticket access and assignment changes discard queue/detail data.
+
+**고객 지원 / 운영자 지원 → 이전 문의**에서 최신 50건 이후를 조회합니다. 페이지는
+누적하지 않으며 **새로고침 / 최신 문의 불러오기**로 처음부터 다시 읽습니다. 실패는
+마지막 페이지가 아닙니다. 초안은 전송하거나 명시적으로 버린 후 탐색하세요.
+이 소스의 Linux 계약·서버 데이터 연동 검증은 실제 SwiftUI 조작, Apple/MFA 로그인,
+기기 검증 또는 배포를 대신하지 않습니다. 공유 Mac은 FILE-ONLY HOLD 상태이며,
+이미지 도구 한도로 화면 검수도 수행하지 않았습니다.
+
 ## Collection health source
 
 After cloud sign-in, open **Optional cloud → Collection health** and explicitly
